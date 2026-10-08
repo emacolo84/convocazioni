@@ -935,39 +935,38 @@ function giaPresenti(){
   var k={},id;for(id in S.partite)if(S.partite[id].data)k[chiave(S.partite[id].data,S.partite[id].partita)]=1;return k;
 }
 function controllaMail(manuale){
-  return claude.use("mcp").then(function(mcp){
-    if(!mcp){if(manuale)stato("Il collegamento a Gmail non è disponibile in questa vista.");return}
-    el("mailBtn").disabled=true;stato("Controllo la mail di TGI Sport…");
-    return mcp.callTool("Gmail","search_threads",{query:"from:"+MAIL.da+" newer_than:120d",pageSize:20},{cache:false})
-    .then(function(res){
-      var th=(payload(res)||{}).threads||[];
-      return Promise.all(th.map(function(t){
-        return mcp.callTool("Gmail","get_thread",{threadId:t.id,messageFormat:"PLAIN_TEXT"},{cache:{staleTime:3600000}})
-          .then(payload).catch(function(){return null});
-      }));
-    }).then(function(threads){
-      var vis={},trov=[],gia=giaPresenti();
-      threads.forEach(function(t){
-        ((t&&t.messages)||[]).forEach(function(m){
-          if(String(m.sender||"").toLowerCase().indexOf(MAIL.da)<0)return;
-          leggiTabella(m.plaintextBody||m.snippet).forEach(function(r){
-            var k=chiave(r.data,r.partita);
-            if(r.data<MAIL.dal||vis[k]||gia[k]||MAIL.ignorate.indexOf(k)>=0)return;
-            vis[k]=1;r.k=k;trov.push(r);
-          });
-        });
+  if(!MAIL.url){
+    if(!manuale)return Promise.resolve();
+    if(!S.db||!S.canWrite){stato("Prima entra con la tua email.");return Promise.resolve()}
+    var u=(prompt("Incolla l'indirizzo dello script Gmail (inizia con https://script.google.com/)")||"").trim();
+    if(!u)return Promise.resolve();
+    if(!/^https:\/\/script\.google(usercontent)?\.com\//.test(u)){stato("Questo non è l'indirizzo dello script Gmail.");return Promise.resolve()}
+    MAIL.url=u;aggiornaMailBtn();
+    S.db.doc("config/mail").set({url:u},{merge:true}).catch(function(){});
+  }
+  el("mailBtn").disabled=true;stato("Controllo la mail di TGI Sport…");
+  return fetch(MAIL.url,{redirect:"follow"}).then(function(r){
+    if(!r.ok)throw new Error("http");return r.json();
+  }).then(function(res){
+    if(!res||!Array.isArray(res.messages))throw new Error("formato");
+    var vis={},trov=[],gia=giaPresenti();
+    res.messages.forEach(function(m){
+      if(String(m.sender||"").toLowerCase().indexOf(MAIL.da)<0)return;
+      leggiTabella(m.body).forEach(function(r){
+        var k=chiave(r.data,r.partita);
+        if(r.data<MAIL.dal||vis[k]||gia[k]||MAIL.ignorate.indexOf(k)>=0)return;
+        vis[k]=1;r.k=k;trov.push(r);
       });
-      trov.sort(function(a,b){return (a.data+a.orario)<(b.data+b.orario)?-1:1});
-      MAIL.trovate=trov;MAIL.controllata=true;renderInbox();
-      stato(trov.length?"Nella mail ci sono "+trov.length+(trov.length===1?" convocazione nuova.":" convocazioni nuove."):"Nessuna convocazione nuova nella mail.");
-    }).catch(function(e){
-      var c=e&&e.code;
-      stato(c==="needs_reauth"?"Gmail chiede di ricollegare l'account: fallo dalle impostazioni dei connettori."
-        :c==="server_not_connected"?"Gmail non è collegato al tuo account Claude."
-        :c==="not_granted"||c==="consent_required"?"Serve il permesso di leggere Gmail per importare le convocazioni."
-        :"Non sono riuscito a leggere la mail. Riprova più tardi.");
-    }).then(function(){el("mailBtn").disabled=false});
-  });
+    });
+    trov.sort(function(a,b){return (a.data+a.orario)<(b.data+b.orario)?-1:1});
+    MAIL.trovate=trov;MAIL.controllata=true;renderInbox();
+    stato(trov.length===1?"Nella mail c'è 1 convocazione nuova.":trov.length?"Nella mail ci sono "+trov.length+" convocazioni nuove.":"Nessuna convocazione nuova nella mail.");
+  }).catch(function(){
+    stato(navigator.onLine===false?"Sei offline: controllo la mail quando torna la rete.":"Non sono riuscito a leggere la mail. Se succede sempre, ricollega lo script Gmail.");
+  }).then(function(){el("mailBtn").disabled=false});
+}
+function aggiornaMailBtn(){
+  var b=el("mailBtn");b.hidden=false;b.textContent=MAIL.url?"Controlla la mail":"Collega Gmail";
 }
 function renderInbox(){
   var box=el("inbox"),ul=el("inboxList");ul.textContent="";
@@ -1001,24 +1000,12 @@ el("inboxAdd").addEventListener("click",function(){
   });
   if(scartate.length){
     MAIL.ignorate=MAIL.ignorate.concat(scartate);
-    if(S.db&&S.canWrite)S.db.doc("config/mail").set({ignorate:MAIL.ignorate}).catch(function(){});
+    if(S.db&&S.canWrite)S.db.doc("config/mail").set({ignorate:MAIL.ignorate},{merge:true}).catch(function(){});
   }
   MAIL.trovate=[];renderInbox();render();
   stato(nuove?"Aggiunte "+nuove+(nuove===1?" partita.":" partite."):"Nessuna partita aggiunta.");
 });
 el("mailBtn").addEventListener("click",function(){controllaMail(true)});
-function avviaMail(){
-  if(!window.claude||!claude.use)return;
-  claude.use("mcp").then(function(mcp){
-    if(!mcp)return;
-    el("mailBtn").hidden=false;
-    // controllo automatico all'apertura solo se il permesso è già stato dato, così non compare nessuna richiesta
-    return claude.use("permissions").then(function(pm){
-      return pm?pm.state("mcp"):null;
-    }).then(function(st){ if(st==="granted")controllaMail(false); });
-  }).catch(function(){});
-}
-
 /* ------------------------- primo render e archivio ------------------------- */
 render();
 
@@ -1103,15 +1090,24 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
       if(e&&e.code==="permission-denied"){stato("Questo account non ha accesso all'archivio.");solaLettura()}
       else stato("Connessione all'archivio interrotta. Ricarica la pagina.");
     }
+    var mailLetta=false,autoFatto=false;
+    function provaMail(){if(!autoFatto&&mailLetta&&S.ready){autoFatto=true;if(MAIL.url)controllaMail(false)}}
     unsubs.push(FS.collection("partite").onSnapshot(function(s){
       var m={};s.docs.forEach(function(d){m[d.id]=Object.assign({},d.data())});
       var primo=!S.ready;S.partite=m;S.ready=true;render();
       if(primo)stato(s.metadata.fromCache?"Archivio offline: si aggiorna quando torna la rete.":"Archivio collegato.");
+      provaMail();
     },onErr));
     unsubs.push(FS.collection("presidi").onSnapshot(function(s){
       var m={};s.docs.forEach(function(d){m[d.id]=Object.assign({},d.data())});
       S.presidi=m;render();
     },onErr));
+    unsubs.push(FS.doc("config/mail").onSnapshot(function(s){
+      var v=(s.exists&&s.data())||{};
+      if(Array.isArray(v.ignorate))MAIL.ignorate=v.ignorate;
+      MAIL.url=v.url||"";aggiornaMailBtn();
+      if(!s.metadata.fromCache){mailLetta=true;provaMail()}
+    },function(){}));
     unsubs.push(FS.doc("config/app").onSnapshot(function(s){
       var v=s.exists&&s.data()?s.data().tariffa:null;
       if(v==="whole"||v==="tier")setTariffa(v,false);

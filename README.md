@@ -8,3 +8,4 @@ Si installa sull'iPhone da Safari: Condividi → Aggiungi alla schermata Home. F
 - `firestore.rules`: regole da incollare in Firestore → Regole (con la propria email).
 - A ogni pubblicazione cambiare `VERSION` in `sw.js`, così il telefono scarica la versione nuova.
 - Il pulsante "Importa backup" carica un file JSON esportato con "Backup".
+- `gmail/Codice.gs`: script Google che legge le convocazioni di TGI Sport dalla Gmail. Si pubblica come app web e il suo indirizzo si incolla nell'app con "Collega Gmail".
