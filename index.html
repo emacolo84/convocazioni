@@ -888,7 +888,7 @@ el("shotBtn").addEventListener("click",function(){
 });
 
 /* ------------------------- convocazioni dalla mail TGI ------------------------- */
-var MAIL={da:"spedatella@tgisport.com",dal:"2026-11-01",trovate:[],ignorate:[],controllata:false};
+var MAIL={da:["spedatella@tgisport.com","supponor.isg@gmail.com"],dal:"2026-11-01",trovate:[],ignorate:[],controllata:false};
 var MESI_L=MESI.map(function(m){return m.toLowerCase()});
 function chiave(data,partita){return data+"|"+String(partita||"").toLowerCase().replace(/[^a-z0-9]/g,"")}
 function dataIt(t){
@@ -924,6 +924,29 @@ function leggiTabella(testo){
   }
   return out;
 }
+// Formato nuovo (dal 11/10/2026, da supponor.isg@gmail.com): una convocazione per mail, senza anno.
+//   venerdì 6 novembre Venezia-Udinese
+//   Serie A · 11 evento 20:45
+//   ritrovo 16:45 – fine 22:45
+var GIORNI="lunedì|martedì|mercoledì|giovedì|venerdì|sabato|domenica|lunedi|martedi|mercoledi|giovedi|venerdi";
+function leggiConvocazione(testo,quando){
+  var out=[],t=String(testo||"").replace(/\r/g,"").replace(/[ \t]+/g," ");
+  var re=new RegExp("(?:(?:"+GIORNI+") )?(\\d{1,2}) ("+MESI_L.join("|")+")(?: (\\d{4}))? ([^\\n]+?) *\\n *([^\\n]*?) *evento (\\d{1,2}[:.]\\d{2})[\\s\\S]*?ritrovo (\\d{1,2}[:.]\\d{2})","gi");
+  var rif=quando?new Date(quando):new Date();if(isNaN(rif))rif=new Date();
+  var m;
+  while((m=re.exec(t))){
+    var mi=MESI_L.indexOf(m[2].toLowerCase()),anno=m[3]?+m[3]:rif.getFullYear();
+    var data=anno+"-"+pad(mi+1)+"-"+pad(+m[1]);
+    if(!m[3]&&new Date(data+"T12:00:00")<new Date(rif.getTime()-60*864e5))data=(anno+1)+data.slice(4);
+    var cr=m[5].split("·"),comp=(cr[0]||"").trim();
+    out.push({data:data,competizione:comp,giornata:(cr[1]||"").trim(),
+      sport:/tennis|atp|wta|davis|bjk|internazionali/i.test(comp)?"Tennis":"Calcio",
+      partita:m[4].trim().replace(/\s*[-–]\s*/,"-"),orario:oraNorm(m[7])});
+  }
+  return out;
+}
+function leggiMail(testo,quando){var r=leggiTabella(testo);return r.length?r:leggiConvocazione(testo,quando)}
+function daTgi(s){s=String(s||"").toLowerCase();return MAIL.da.some(function(a){return s.indexOf(a)>=0})}
 function payload(r){
   if(!r)return null;
   if(r.payload!=null)return r.payload;
@@ -951,8 +974,8 @@ function controllaMail(manuale){
     if(!res||!Array.isArray(res.messages))throw new Error("formato");
     var vis={},trov=[],gia=giaPresenti();
     res.messages.forEach(function(m){
-      if(String(m.sender||"").toLowerCase().indexOf(MAIL.da)<0)return;
-      leggiTabella(m.body).forEach(function(r){
+      if(!daTgi(m.sender))return;
+      leggiMail(m.body,m.date).forEach(function(r){
         var k=chiave(r.data,r.partita);
         if(r.data<MAIL.dal||vis[k]||gia[k]||MAIL.ignorate.indexOf(k)>=0)return;
         vis[k]=1;r.k=k;trov.push(r);
@@ -971,7 +994,7 @@ function aggiornaMailBtn(){
 function renderInbox(){
   var box=el("inbox"),ul=el("inboxList");ul.textContent="";
   box.hidden=!MAIL.trovate.length;
-  el("inboxInfo").textContent=MAIL.trovate.length?"dalla mail di Simone Pedatella":"";
+  el("inboxInfo").textContent=MAIL.trovate.length?"dalla mail di TGI Sport":"";
   MAIL.trovate.forEach(function(r,i){
     var li=document.createElement("li"),lab=document.createElement("label"),cb=document.createElement("input");
     cb.type="checkbox";cb.checked=true;cb.id="mail-"+i;

@@ -1,17 +1,19 @@
 // Script Google per l'app Convocazioni e presidi.
-// Legge le convocazioni che spedatella@tgisport.com manda alla tua Gmail
+// Legge le convocazioni che TGI Sport manda alla tua Gmail
 // e le passa all'app, che te le propone da aggiungere.
 // Pubblicalo come "App web", con "Esegui come: Me" e "Chi ha accesso: Chiunque".
 // L'indirizzo dell'app web va incollato una volta sola nell'app (pulsante "Collega Gmail").
 
-const MITTENTE = 'spedatella@tgisport.com';
+// Indirizzi da cui arrivano le convocazioni (dal 11/10/2026 anche la piattaforma TGI).
+const MITTENTI = ['spedatella@tgisport.com', 'supponor.isg@gmail.com'];
 
 function doGet() {
   const messaggi = [];
-  GmailApp.search('from:' + MITTENTE + ' newer_than:120d', 0, 30).forEach(function (thread) {
+  GmailApp.search('from:(' + MITTENTI.join(' OR ') + ') newer_than:120d', 0, 50).forEach(function (thread) {
     thread.getMessages().forEach(function (m) {
-      if (m.getFrom().toLowerCase().indexOf(MITTENTE) < 0) return;
-      messaggi.push({ sender: m.getFrom(), body: tabella(m.getBody()) + '\n' + m.getPlainBody() });
+      const da = m.getFrom().toLowerCase();
+      if (!MITTENTI.some(function (a) { return da.indexOf(a) >= 0; })) return;
+      messaggi.push({ sender: m.getFrom(), date: m.getDate().toISOString(), body: tabella(m.getBody()) + '\n' + m.getPlainBody() });
     });
   });
   return ContentService.createTextOutput(JSON.stringify({ messages: messaggi }))
