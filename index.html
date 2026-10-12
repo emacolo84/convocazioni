@@ -294,6 +294,44 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .card input[type=number]::-webkit-inner-spin-button,.card input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .card input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .cline input[type=time]{min-width:0;cursor:pointer}
+
+/* ---- recap mensile ---- */
+body[data-view="recap"]{--acc:var(--ok);--acc-soft:color-mix(in srgb,var(--ok) 12%,var(--surface))}
+body:not([data-view="recap"]) .only-recap{display:none!important}
+body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-view="recap"] .no-recap{display:none!important}
+.rrow{position:relative;display:grid;grid-template-columns:5px minmax(0,1fr) auto;align-items:center;gap:0 16px;
+  padding:15px 18px;border-top:1px solid var(--line)}
+.rlist .rrow:first-child{border-top:0}
+.rrow.del-pad{padding-right:48px}
+.rbar{align-self:stretch;border-radius:99px;background:var(--ink-3)}
+.r-tgi .rbar{background:var(--tgi)} .r-aud .rbar{background:var(--audio)} .r-fix .rbar{background:var(--ok)}
+.rmain{min-width:0;display:grid;gap:1px}
+.rtit{display:flex;align-items:center;gap:10px;min-width:0;font-size:18px;font-weight:700}
+.rtit input{font-size:18px;font-weight:700;padding:1px 4px;margin-left:-5px;width:100%;min-width:0}
+.rlogo{display:inline-flex;align-items:center;height:36px;padding:5px 10px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+.rlogo img{display:block;height:100%;width:auto;max-width:150px;object-fit:contain}
+.rsub{color:var(--ink-2);font-size:14px}
+.rsub a{color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.ramt{font-family:var(--display);font-weight:700;font-size:24px;font-variant-numeric:tabular-nums;white-space:nowrap;
+  display:flex;align-items:center;gap:2px}
+.ramt input{font-family:var(--display);font-weight:700;font-size:24px;width:auto;field-sizing:content;min-width:3em;
+  text-align:right;padding:1px 4px}
+.ramt input::-webkit-inner-spin-button,.ramt input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.ramt input{-moz-appearance:textfield;appearance:textfield}
+.rrow .del{position:absolute;top:50%;right:10px;transform:translateY(-50%)}
+.rzero .ramt{color:var(--ink-3)}
+.fix{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.fix input{width:auto;font-size:13.5px;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2)}
+.fix input.fnome{width:220px;max-width:100%}
+.fix input.fimp{width:90px;text-align:right}
+.fix input[type=month]{width:auto}
+@media (max-width:620px){
+  .rrow{padding:13px 14px;gap:0 12px}
+  .rrow.del-pad{padding-right:40px}
+  .rtit,.rtit input{font-size:16.5px}
+  .ramt,.ramt input{font-size:21px}
+  .rlogo{height:32px}
+}
 .login{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px}
 .login[hidden]{display:none}
 .login-in{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 18px;display:grid;gap:12px;justify-items:center;text-align:center}
@@ -314,6 +352,7 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
         <select id="collab" aria-label="Collaborazione">
           <option value="tgi">TGI Sport</option>
           <option value="aud">Leading Technologies</option>
+          <option value="recap">Recap mensile</option>
         </select>
       </label>
       <span class="brand only-tgi" id="brandTgi"></span>
@@ -384,6 +423,27 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
       <span class="tot"><small>Totale</small><span id="audTot">€ 0,00</span></span>
     </div>
   </section>
+
+  <section class="panel p-recap only-recap">
+    <div class="phead">
+      <h2>Entrate del mese</h2>
+      <span class="right" id="recapCount"></span>
+    </div>
+    <div class="rlist" id="recapBody"></div>
+    <div class="pfoot">
+      <button class="btn primary" id="addEntrata" type="button">+ Entrata</button>
+      <span class="tot"><small>Totale del mese</small><span id="recapTot">€ 0,00</span></span>
+    </div>
+  </section>
+
+  <div class="rate only-recap">
+    <span class="lab">Entrata fissa ogni mese</span>
+    <div class="fix">
+      <input type="text" id="fixNome" class="fnome" aria-label="Da chi arriva l'entrata fissa" placeholder="Da chi">
+      <input type="number" id="fixImp" class="fimp" step="0.01" min="0" aria-label="Importo al mese"><span>€ al mese, da</span>
+      <input type="month" id="fixDal" aria-label="Dal mese">
+    </div>
+  </div>
 
   <div class="rate only-aud">
     <span class="lab">Oltre le 30 ore nel mese</span>
@@ -533,6 +593,32 @@ function monteOre(key){
   var t=righeMese(S.presidi,key).reduce(function(s,r){return s+(+r.d.ore||0)},0);
   return Math.round(t*100)/100;
 }
+/* recap: entrata fissa e entrate personalizzate, tutto in config/recap */
+var RECAP0={nome:"Collaborazione video editing",importo:1400,dal:"2026-10"};
+S.recap={fisso:Object.assign({},RECAP0),entrate:{}};
+function setRecap(v){
+  v=v||{};
+  var f=v.fisso&&typeof v.fisso==="object"?v.fisso:{};
+  S.recap={fisso:{nome:f.nome!=null?String(f.nome):RECAP0.nome,importo:f.importo!=null?+f.importo||0:RECAP0.importo,dal:f.dal!=null?String(f.dal):RECAP0.dal},
+           entrate:v.entrate&&typeof v.entrate==="object"?v.entrate:{}};
+}
+function salvaRecap(){
+  if(!S.db||!S.canWrite)return;
+  S.db.doc("config/recap").set(JSON.parse(JSON.stringify(S.recap))).then(function(){stato("Salvato.")})
+    .catch(function(e){if(e&&(e.code==="invalid_argument"||e.code==="permission-denied"))solaLettura();else stato("Non ho potuto salvare il recap. Riprova.")});
+}
+function fissoMese(k){var f=S.recap.fisso;if(!f||!(+f.importo))return 0;if(f.dal&&k<f.dal)return 0;return +f.importo}
+function altreMese(k){
+  var out=[],id,m=S.recap.entrate;
+  for(id in m)if(m.hasOwnProperty(id)&&m[id]&&m[id].mese===k)out.push({id:id,d:m[id]});
+  out.sort(function(a,b){var x=(a.d.creata?"1"+a.d.creata:"0")+a.id,y=(b.d.creata?"1"+b.d.creata:"0")+b.id;return x<y?-1:1});
+  return out;
+}
+function recapMese(k){
+  var t=totaleTgi(k),a=compenso(monteOre(k)),f=fissoMese(k),
+      o=altreMese(k).reduce(function(s,r){return s+(+r.d.importo||0)},0);
+  return {t:t,a:a,f:f,o:Math.round(o*100)/100,tot:Math.round((t+a+f+o)*100)/100};
+}
 function compenso(h){
   if(!h)return 0;
   if(h<=30)return Math.round(h*25*100)/100;
@@ -623,7 +709,7 @@ function renderMonths(){
   var nav=el("months");nav.textContent="";
   el("seasonLab").textContent=S.anno+"/"+(S.anno+1);
   mesiStagione(S.anno).forEach(function(k){
-    var n=righeMese(S.vista==='tgi'?S.partite:S.presidi,k).length;
+    var n=S.vista==='recap'?(righeMese(S.partite,k).length+righeMese(S.presidi,k).length+altreMese(k).length):righeMese(S.vista==='tgi'?S.partite:S.presidi,k).length;
     var b=document.createElement("button");
     b.className="mo";b.type="button";
     b.setAttribute("aria-current",k===S.mese?"true":"false");
@@ -763,6 +849,21 @@ function stagioneTot(){
 }
 function renderTiles(){
   var st=stagioneTot(),stag=S.anno+"/"+(S.anno+1);
+  if(S.vista==="recap"){
+    var r=recapMese(S.mese),ts=0,nm=0,oggi=new Date(),ko=oggi.getFullYear()+"-"+pad(oggi.getMonth()+1);
+    mesiStagione(S.anno).forEach(function(k){var x=recapMese(k).tot;ts+=x;if(k<=ko&&x){nm++}});
+    var tsPass=mesiStagione(S.anno).filter(function(k){return k<=ko}).reduce(function(s,k){return s+recapMese(k).tot},0);
+    el("t1Lab").textContent="Entrate del mese";
+    el("t1Big").textContent=money(r.tot);
+    el("t1Foot").textContent=labelMese(S.mese)+" · TGI, Leading Technologies, fissa e altre";
+    el("t2Lab").textContent="Media al mese";
+    el("t2Big").textContent=nm?money(Math.round(tsPass/nm*100)/100):"—";
+    el("t2Foot").textContent=nm?"stagione "+stag+", sui "+nm+(nm===1?" mese":" mesi")+" fino a oggi":"ancora nessun mese con entrate";
+    el("t3Lab").textContent="Entrate stagione "+stag;
+    el("t3Big").textContent=money(ts);
+    el("t3Foot").textContent="da agosto a luglio, compresa l'entrata fissa dei mesi futuri";
+    return;
+  }
   if(S.vista==="tgi"){
     var t=totaleTgi(S.mese),np=righeMese(S.partite,S.mese).length;
     el("t1Lab").textContent="Da fatturare a TGI Sport";
@@ -796,6 +897,24 @@ function renderSummary(){
   var tgi=S.vista==="tgi";
   function th(txt,num){var x=document.createElement("th");if(num)x.className="num";x.textContent=txt;head.appendChild(x)}
   th("Mese");
+  if(S.vista==="recap"){
+    ["TGI Sport","Leading Tech.","Fissa","Altre","Totale"].forEach(function(t){th(t,1)});
+    var Z={t:0,a:0,f:0,o:0,tot:0};
+    mesiStagione(S.anno).forEach(function(k){
+      var r=recapMese(k);if(!r.tot)return;
+      var tr=document.createElement("tr");
+      function c(txt,cls){var td=document.createElement("td");td.className="sumcell "+(cls||"");td.textContent=txt;tr.appendChild(td)}
+      c(labelMese(k));["t","a","f","o","tot"].forEach(function(q){Z[q]+=r[q];c(money(r[q]),"num")});
+      tr.style.cursor="pointer";
+      tr.addEventListener("click",function(){S.mese=k;render();window.scrollTo({top:0,behavior:"smooth"})});
+      body.appendChild(tr);
+    });
+    if(!body.children.length){var tr0=document.createElement("tr"),td0=document.createElement("td");
+      td0.colSpan=6;td0.className="empty";td0.textContent="Ancora nessuna entrata in questa stagione.";tr0.appendChild(td0);body.appendChild(tr0)}
+    function tf0(txt,num){var x=document.createElement("td");if(num)x.className="num";x.textContent=txt;foot.appendChild(x)}
+    tf0("Stagione");["t","a","f","o","tot"].forEach(function(q){tf0(money(Z[q]),1)});
+    return;
+  }
   if(tgi){th("Partite",1);th("Netto",1)} else {th("Ore",1);th("Tariffa",1);th("Netto",1)}
   var c1=0,c2=0;
   mesiStagione(S.anno).forEach(function(k){
@@ -827,11 +946,67 @@ function renderSummary(){
   if(tgi){tf(String(c1),1);tf(money(c2),1)} else {tf(ore(Math.round(c1*100)/100),1);tf("",1);tf(money(c2),1)}
 }
 
-function render(){renderMonths();renderTiles();renderTgi();renderAud();renderSummary()}
+function renderRecap(){
+  var body=el("recapBody");body.textContent="";
+  var k=S.mese,r=recapMese(k),np=righeMese(S.partite,k).length,h=monteOre(k);
+  function riga(cls,tit,sub,amt){
+    var row=document.createElement("div");row.className="rrow "+cls;
+    var bar=document.createElement("span");bar.className="rbar";row.appendChild(bar);
+    var m=document.createElement("div");m.className="rmain";
+    var t=document.createElement("div");t.className="rtit";
+    if(typeof tit==="string")t.textContent=tit;else t.appendChild(tit);
+    m.appendChild(t);
+    if(sub){var s=document.createElement("div");s.className="rsub";if(typeof sub==="string")s.textContent=sub;else s.appendChild(sub);m.appendChild(s)}
+    row.appendChild(m);
+    var a=document.createElement("div");a.className="ramt";
+    if(typeof amt==="number")a.textContent=money(amt);else a.appendChild(amt);
+    row.appendChild(a);
+    body.appendChild(row);
+    return row;
+  }
+  function logo(src,alt,txt){
+    if(!src)return txt;
+    var w=document.createElement("span");w.className="rlogo";
+    w.appendChild(Object.assign(document.createElement("img"),{src:src,alt:alt}));
+    return w;
+  }
+  function vai(v,txt){var a=document.createElement("a");a.textContent=txt;a.tabIndex=0;
+    a.addEventListener("click",function(){setVista(v);window.scrollTo({top:0,behavior:"smooth"})});return a}
+  riga("r-tgi"+(r.t?"":" rzero"),logo(LOGHI._tgi,"TGI Sport","TGI Sport"),
+    vai("tgi",np?np+(np===1?" partita":" partite"):"nessuna partita"),r.t);
+  riga("r-aud"+(r.a?"":" rzero"),logo(LOGHI._lt,"Leading Technologies","Leading Technologies"),
+    vai("aud",h?ore(h)+" ore di presidio":"nessun presidio"),r.a);
+  if(r.f)riga("r-fix",S.recap.fisso.nome||"Entrata fissa","Entrata fissa ogni mese",r.f);
+  altreMese(k).forEach(function(x){
+    var d=x.d;
+    var nome=mkInput({type:"text",id:"e-da-"+x.id,placeholder:"Da chi","aria-label":"Da chi"},null,d.da,function(){
+      d.da=this.value;salvaRecap();});
+    var amt=document.createElement("span");
+    amt.appendChild(mkInput({type:"number",step:"0.01",min:"0",inputmode:"decimal",id:"e-imp-"+x.id,"aria-label":"Importo"},null,d.importo==null?"":d.importo,function(){
+      d.importo=this.value===""?0:+this.value;salvaRecap();render();}));
+    amt.appendChild(mkSpan("€"));
+    amt.style.display="contents";
+    var row=riga("r-alt del-pad",nome,"Entrata personalizzata",amt);
+    var b=document.createElement("button");b.className="del";b.type="button";b.title="Elimina l'entrata";b.textContent="×";
+    if(!S.canWrite)b.disabled=true;
+    b.addEventListener("click",function(){delete S.recap.entrate[x.id];salvaRecap();render()});
+    row.appendChild(b);
+  });
+  var n=(r.t?1:0)+(r.a?1:0)+(r.f?1:0)+altreMese(k).length;
+  el("recapCount").textContent=labelMese(k);
+  el("recapTot").textContent=money(r.tot);
+  var f=S.recap.fisso,fn=el("fixNome"),fi=el("fixImp"),fd=el("fixDal");
+  if(document.activeElement!==fn)fn.value=f.nome||"";
+  if(document.activeElement!==fi)fi.value=f.importo==null?"":f.importo;
+  if(document.activeElement!==fd)fd.value=f.dal||"";
+  [fn,fi,fd].forEach(function(i){i.readOnly=!S.canWrite});
+}
+
+function render(){renderMonths();renderTiles();renderTgi();renderAud();renderRecap();renderSummary()}
 
 /* ------------------------- comandi ------------------------- */
 function setVista(v){
-  S.vista=(v==="aud")?"aud":"tgi";
+  S.vista=(v==="aud"||v==="recap")?v:"tgi";
   document.body.setAttribute("data-view",S.vista);
   el("collab").value=S.vista;
   try{localStorage.setItem("vista",S.vista)}catch(e){}
@@ -853,6 +1028,16 @@ el("addAud").addEventListener("click",function(){
   var f=el("a-i-"+id);if(f)f.focus();
 });
 
+el("addEntrata").addEventListener("click",function(){
+  if(!S.canWrite)return;
+  var id=nuovoId();S.recap.entrate[id]={mese:S.mese,da:"",importo:0,creata:new Date().toISOString()};
+  salvaRecap();render();
+  var f=el("e-da-"+id);if(f)f.focus();
+});
+el("fixNome").addEventListener("change",function(){S.recap.fisso.nome=this.value.trim();salvaRecap();render()});
+el("fixImp").addEventListener("change",function(){S.recap.fisso.importo=this.value===""?0:+this.value;salvaRecap();render()});
+el("fixDal").addEventListener("change",function(){S.recap.fisso.dal=/^\d{4}-\d{2}$/.test(this.value)?this.value:"";salvaRecap();render()});
+
 function setTariffa(v,write){
   S.tariffa=v;
   el("rateWhole").setAttribute("aria-pressed",v==="whole"?"true":"false");
@@ -866,7 +1051,17 @@ el("rateTier").addEventListener("click",function(){setTariffa("tier",true)});
 /* ------------------------- export CSV ------------------------- */
 el("exportBtn").addEventListener("click",function(){
   var q=function(v){v=v==null?"":String(v);return '"'+v.replace(/"/g,'""')+'"'};
-  var L=[],tgi=S.vista==="tgi",tot=0;
+  var L=[],tgi=S.vista==="tgi",tot=0,recap=S.vista==="recap";
+  if(recap){
+    L.push(q("RECAP MENSILE · Stagione "+S.anno+"/"+(S.anno+1)));L.push("");
+    L.push(["Mese","TGI Sport","Leading Technologies",S.recap.fisso.nome||"Entrata fissa","Altre entrate","Dettaglio altre","Totale"].map(q).join(";"));
+    mesiStagione(S.anno).forEach(function(k){
+      var r=recapMese(k);if(!r.tot)return;tot+=r.tot;
+      var det=altreMese(k).map(function(x){return (x.d.da||"?")+" "+num2.format(+x.d.importo||0)}).join(", ");
+      L.push([labelMese(k),num2.format(r.t),num2.format(r.a),num2.format(r.f),num2.format(r.o),det,num2.format(r.tot)].map(q).join(";"));
+    });
+    L.push(["TOTALE","","","","","",num2.format(tot)].map(q).join(";"));
+  } else {
   L.push(q((tgi?"TGI SPORT – Virtualizzazioni partite":"LEADING TECHNOLOGIES – Ore presidio audio")+" · Stagione "+S.anno+"/"+(S.anno+1)));
   L.push("");
   if(tgi){
@@ -900,8 +1095,9 @@ el("exportBtn").addEventListener("click",function(){
     });
     L.push(["TOTALE","","",num2.format(tot)].map(q).join(";"));
   }
+  }
   var csv=String.fromCharCode(0xFEFF)+L.join("\r\n");
-  var nome=(tgi?"TGI Sport ":"Leading Technologies ")+S.anno+"-"+(S.anno+1)+".csv";
+  var nome=(recap?"Recap mensile ":tgi?"TGI Sport ":"Leading Technologies ")+S.anno+"-"+(S.anno+1)+".csv";
   usaDownloads().then(function(dl){
     if(!dl){stato("Il download non è disponibile in questa vista.");return}
     return dl.save({filename:nome,data:csv}).then(function(){stato("CSV pronto.")});
@@ -1123,7 +1319,7 @@ function usaDownloads(){return Promise.resolve({save:function(o){return salvaFil
 
 /* ------------------------- backup ------------------------- */
 el("backupBtn").addEventListener("click",function(){
-  var d={app:"convocazioni-presidi",v:1,esportato:new Date().toISOString(),partite:S.partite,presidi:S.presidi,config:{app:{tariffa:S.tariffa}}};
+  var d={app:"convocazioni-presidi",v:1,esportato:new Date().toISOString(),partite:S.partite,presidi:S.presidi,config:{app:{tariffa:S.tariffa},recap:S.recap}};
   var oggi=new Date().toISOString().slice(0,10);
   salvaFile("backup-convocazioni-"+oggi+".json",JSON.stringify(d)).then(function(){stato("Backup pronto.")}).catch(function(){stato("Backup annullato.")});
 });
@@ -1142,6 +1338,7 @@ el("importFile").addEventListener("change",function(){
       Object.keys(col).forEach(function(id){if(col[id]&&typeof col[id]==="object")w.push([c,id,col[id]])});
     });
     if(d&&d.config&&d.config.app)w.push(["config","app",d.config.app]);
+    if(d&&d.config&&d.config.recap)w.push(["config","recap",d.config.recap]);
     if(!w.length){stato("Nel file non ci sono dati da importare.");return}
     if(!confirm("Importo "+w.length+" righe dal backup? Le righe con lo stesso codice vengono sovrascritte."))return;
     stato("Importo…");
@@ -1208,6 +1405,9 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
     unsubs.push(FS.doc("config/app").onSnapshot(function(s){
       var v=s.exists&&s.data()?s.data().tariffa:null;
       if(v==="whole"||v==="tier")setTariffa(v,false);
+    },function(){}));
+    unsubs.push(FS.doc("config/recap").onSnapshot(function(s){
+      if(s.exists&&s.data()){setRecap(s.data());render()}
     },function(){}));
   });
 } else {
