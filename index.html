@@ -250,6 +250,50 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .mailbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:9px 14px;border-top:1px solid var(--line);
   background:var(--surface-2);font-size:12.5px;color:var(--ink-2)}
 .phead .btn{padding:4px 10px;font-size:13px}
+
+/* Schede partita/presidio, sul modello dell'app convocazioni di TGI Sport */
+.cards{display:grid}
+.card{position:relative;display:grid;grid-template-columns:78px minmax(0,1fr);gap:0 18px;padding:18px 48px 18px 18px;border-top:1px solid var(--line)}
+.cards .card:first-child{border-top:0}
+.dtile{position:relative;align-self:start;width:78px;border-radius:16px;background:var(--tgi-soft);color:var(--tgi);
+  display:grid;justify-items:center;padding:9px 0 8px;line-height:1;cursor:pointer;user-select:none}
+.p-aud .dtile{background:var(--audio-soft);color:var(--audio)}
+.dtile .wd{font-size:14px;font-weight:600}
+.dtile .dd{font-family:var(--display);font-weight:700;font-size:42px;line-height:.92;margin:3px 0 2px;font-variant-numeric:tabular-nums}
+.dtile .mm{font-size:14px;font-weight:600}
+.dtile .nd{font-size:12.5px;font-weight:600;padding:12px 4px;text-align:center;line-height:1.2}
+.dtile input[type=date]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+.dtile:focus-within{box-shadow:0 0 0 3px color-mix(in srgb,currentColor 30%,transparent)}
+.cbody{min-width:0;display:grid;gap:2px;align-content:start}
+.ctitle{display:flex;align-items:center;gap:8px;min-width:0}
+.ctitle input{font-size:19px;font-weight:700;padding:1px 4px;margin-left:-5px;width:auto;field-sizing:content;min-width:80px;max-width:100%;flex:0 1 auto}
+.ctitle .crest{width:26px;height:26px}
+.ctitle .crest.flag{width:28px;height:21px}
+.ctitle .crest.lega{width:auto;height:24px;max-width:52px}
+.cline{display:flex;flex-wrap:wrap;align-items:center;gap:0 6px;color:var(--ink-2);font-size:15px;min-width:0}
+.cline input{font-size:15px;padding:1px 4px;width:auto;field-sizing:content;min-width:2.2em;color:inherit}
+.cline input[type=time]{min-width:5.4em}
+.cline b,.cline input.strong{color:var(--ink);font-weight:700}
+.cline .sep{color:var(--ink-3)}
+.cfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+.pill{display:inline-flex;align-items:center;gap:2px;border-radius:99px;padding:3px 12px;font-weight:600;font-size:15px;
+  background:color-mix(in srgb,var(--ok) 13%,transparent);color:var(--ok)}
+.pill input{color:inherit;font-weight:600;font-size:15px;padding:1px 2px;width:auto;field-sizing:content;min-width:2.5em;text-align:right}
+.p-aud .pill{background:var(--audio-soft);color:var(--audio)}
+.cfoot .hint{display:inline;font-size:13px;padding:0}
+.card .del{position:absolute;top:14px;right:10px}
+@media (max-width:620px){
+  .card{grid-template-columns:64px minmax(0,1fr);gap:0 13px;padding:14px 40px 14px 14px}
+  .dtile{width:64px;border-radius:14px;padding:7px 0 6px}
+  .dtile .dd{font-size:34px}
+  .dtile .wd,.dtile .mm{font-size:12.5px}
+  .ctitle input{font-size:17px}
+  .cline,.cline input,.pill,.pill input{font-size:14px}
+}
+.card input::-webkit-calendar-picker-indicator{display:none}
+.card input[type=number]::-webkit-inner-spin-button,.card input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.card input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.cline input[type=time]{min-width:0;cursor:pointer}
 .login{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px}
 .login[hidden]{display:none}
 .login-in{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 18px;display:grid;gap:12px;justify-items:center;text-align:center}
@@ -317,15 +361,7 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
       <span class="right" id="tgiCount"></span>
       <button class="btn" id="mailBtn" type="button" hidden>Controlla la mail</button>
     </div>
-    <div class="scroll">
-      <table>
-        <thead><tr>
-          <th class="w-date">Data</th><th class="w-short">Giornata</th><th class="w-time">Orario conv.</th>
-          <th>Partita</th><th class="w-money" style="text-align:center">Netto a pagare</th><th></th>
-        </tr></thead>
-        <tbody id="tgiBody"></tbody>
-      </table>
-    </div>
+    <div class="cards" id="tgiBody"></div>
     <div id="tgiEmpty" class="empty" hidden>Nessuna partita in questo mese. Aggiungi la prima convocazione.</div>
     <div class="pfoot">
       <button class="btn primary" id="addTgi">+ Partita</button>
@@ -339,15 +375,7 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
       <span class="right" id="audCount"></span>
       <button class="btn" id="shotBtn" type="button" title="Immagine dei presidi del mese da mandare al collega">Screen presidi</button>
     </div>
-    <div class="scroll">
-      <table>
-        <thead><tr>
-          <th class="w-date">Data</th><th>Evento</th><th class="w-time">Inizio</th><th class="w-time">Fine</th>
-          <th class="w-short">Ore fatte</th><th></th>
-        </tr></thead>
-        <tbody id="audBody"></tbody>
-      </table>
-    </div>
+    <div class="cards" id="audBody"></div>
     <div id="audEmpty" class="empty" hidden>Nessun presidio in questo mese. Aggiungi il primo turno.</div>
     <div class="note">Le ore si calcolano da sé dagli orari, in centesimi: un quarto d'ora è 0,25, mezz'ora 0,50, tre quarti 0,75. Puoi sempre correggerle a mano.</div>
     <div class="pfoot">
@@ -607,31 +635,71 @@ function renderMonths(){
   });
 }
 
+var GG_BREVI=["Dom","Lun","Mar","Mer","Gio","Ven","Sab"],MM_BREVI=["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+/* riquadro della data: giorno, numero e mese; toccandolo si apre il calendario */
+function mkTile(id,iso,onSet){
+  var t=document.createElement("div");t.className="dtile";
+  var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");
+  if(m){
+    var dt=new Date(+m[1],+m[2]-1,+m[3]);
+    t.innerHTML='<span class="wd">'+GG_BREVI[dt.getDay()]+'</span><span class="dd">'+(+m[3])+'</span><span class="mm">'+MM_BREVI[+m[2]-1]+'</span>';
+    t.title=dataLunga(iso)+" · tocca per cambiare la data";
+  } else {
+    t.innerHTML='<span class="nd">Scegli la data</span>';
+  }
+  var di=document.createElement("input");di.type="date";di.id=id;di.value=iso||"";
+  di.setAttribute("aria-label","Data");
+  if(!S.canWrite)di.disabled=true;
+  di.addEventListener("click",function(){try{di.showPicker()}catch(e){}});
+  di.addEventListener("change",function(){if(di.value&&di.value!==iso)onSet(di.value)});
+  t.appendChild(di);
+  return t;
+}
+function apriPicker(i){i.addEventListener("click",function(){try{i.showPicker()}catch(e){}});return i}
+function mkSpan(txt,cls){var x=document.createElement("span");if(cls)x.className=cls;x.textContent=txt;return x}
+function mkCard(tile){
+  var c=document.createElement("article");c.className="card";
+  var b=document.createElement("div");b.className="cbody";
+  c.appendChild(tile);c.appendChild(b);
+  return {card:c,body:b};
+}
+
 function renderTgi(){
   var body=el("tgiBody");body.textContent="";
   var rows=righeMese(S.partite,S.mese);
   el("tgiEmpty").hidden=rows.length>0;
   el("tgiCount").textContent=rows.length?rows.length+(rows.length===1?" convocazione":" convocazioni"):"";
   rows.forEach(function(r){
-    var d=r.d,tr=document.createElement("tr");
-    cell(tr,mkData("p-data-"+r.id,d.data,function(v){
-      d.data=v;d.mese=meseKey(v);salva("partite",r.id,d);render();}),"c-data");
-    var tdG=cell(tr,mkInput({type:"text",id:"p-g-"+r.id,placeholder:"1a"},"w-short",d.giornata,function(){
-      d.giornata=this.value;salva("partite",r.id,d);}),"c-g");
-    if(d.competizione){var cp=document.createElement("span");cp.className="compet";cp.textContent=d.competizione;tdG.appendChild(cp);}
-    cell(tr,mkInput({type:"time",id:"p-o-"+r.id},"w-time",d.orario,function(){
-      d.orario=this.value;salva("partite",r.id,d);}),"c-o");
-    var box=document.createElement("div");box.className="match";
+    var d=r.d;
+    var k=mkCard(mkTile("p-data-"+r.id,d.data,function(v){d.data=v;d.mese=meseKey(v);salva("partite",r.id,d);render();}));
+    var tit=document.createElement("div");tit.className="ctitle match";
     var sq=squadre(d.partita),s1=logoSquadra(sq[0]),s2=logoSquadra(sq[1]);
-    if(s1)box.appendChild(s1);
-    box.appendChild(mkInput({type:"text",id:"p-m-"+r.id,placeholder:"Squadra – Squadra"},null,d.partita,function(){
+    if(s1)tit.appendChild(s1);
+    tit.appendChild(mkInput({type:"text",id:"p-m-"+r.id,placeholder:"Squadra – Squadra","aria-label":"Partita"},null,d.partita,function(){
       d.partita=this.value;salva("partite",r.id,d);render();}));
-    if(s2)box.appendChild(s2);
-    cell(tr,box,"c-m");
-    cell(tr,mkInput({type:"number",step:"0.01",min:"0",id:"p-e-"+r.id},"money w-money",d.importo,function(){
-      d.importo=this.value===""?0:+this.value;salva("partite",r.id,d);render();}),"num c-e");
-    cell(tr,delBtn("partite",r.id),"num c-x");
-    body.appendChild(tr);
+    if(s2)tit.appendChild(s2);
+    k.body.appendChild(tit);
+    var sub=document.createElement("div");sub.className="cline";
+    if(d.competizione){sub.appendChild(mkSpan(d.competizione));sub.appendChild(mkSpan("·","sep"));}
+    if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(mkSpan("giornata"));
+    sub.appendChild(mkInput({type:"text",id:"p-g-"+r.id,placeholder:"–","aria-label":"Giornata"},null,d.giornata,function(){
+      d.giornata=this.value;salva("partite",r.id,d);}));
+    k.body.appendChild(sub);
+    var tm=document.createElement("div");tm.className="cline";
+    tm.appendChild(mkSpan("Convocazione"));
+    tm.appendChild(apriPicker(mkInput({type:"time",id:"p-o-"+r.id,"aria-label":"Orario di convocazione"},"strong",d.orario,function(){
+      d.orario=this.value;salva("partite",r.id,d);})));
+    k.body.appendChild(tm);
+    var ft=document.createElement("div");ft.className="cfoot";
+    var pill=document.createElement("span");pill.className="pill";
+    pill.appendChild(mkInput({type:"number",step:"0.01",min:"0",id:"p-e-"+r.id,"aria-label":"Netto a pagare"},"money",d.importo,function(){
+      d.importo=this.value===""?0:+this.value;salva("partite",r.id,d);render();}));
+    pill.appendChild(mkSpan("€"));
+    ft.appendChild(pill);
+    if(/tennis/i.test(d.sport||"")||+d.importo===210)ft.appendChild(mkSpan("tennis","hint"));
+    k.body.appendChild(ft);
+    k.card.appendChild(delBtn("partite",r.id));
+    body.appendChild(k.card);
   });
   el("tgiTot").textContent=money(totaleTgi(S.mese));
 }
@@ -642,34 +710,40 @@ function renderAud(){
   el("audEmpty").hidden=rows.length>0;
   el("audCount").textContent=rows.length?rows.length+(rows.length===1?" turno":" turni"):"";
   rows.forEach(function(r){
-    var d=r.d,tr=document.createElement("tr");
+    var d=r.d;
     function ricalcola(){
       var h=oreDaOrari(d.inizio,d.fine);
       if(h!=null)d.ore=h;
       salva("presidi",r.id,d);render();
     }
-    cell(tr,mkData("a-data-"+r.id,d.data,function(v){
-      d.data=v;d.mese=meseKey(v);salva("presidi",r.id,d);render();}));
-    var ev=document.createElement("div");ev.className="ev";
-    if(LOGHI._seriea&&/serie\s*a(?![a-z])/i.test(d.evento||""))ev.appendChild(imgCrest(LOGHI._seriea,"Serie A Enilive"));
-    ev.appendChild(mkInput({type:"text",id:"a-ev-"+r.id,placeholder:"Serie A"},null,d.evento,function(){
+    var k=mkCard(mkTile("a-data-"+r.id,d.data,function(v){d.data=v;d.mese=meseKey(v);salva("presidi",r.id,d);render();}));
+    var tit=document.createElement("div");tit.className="ctitle ev";
+    if(LOGHI._seriea&&/serie\s*a(?![a-z])/i.test(d.evento||"")){var lg=imgCrest(LOGHI._seriea,"Serie A Enilive");lg.classList.add("lega");tit.appendChild(lg);}
+    tit.appendChild(mkInput({type:"text",id:"a-ev-"+r.id,placeholder:"Serie A","aria-label":"Evento"},null,d.evento,function(){
       d.evento=this.value;salva("presidi",r.id,d);render();}));
-    cell(tr,ev);
-    cell(tr,mkInput({type:"time",id:"a-i-"+r.id},"w-time",d.inizio,function(){
-      d.inizio=this.value;ricalcola();}));
-    cell(tr,mkInput({type:"time",id:"a-f-"+r.id},"w-time",d.fine,function(){
-      d.fine=this.value;ricalcola();}));
-    var td=cell(tr,mkInput({type:"number",step:"0.01",min:"0",id:"a-h-"+r.id},"ore w-short",
-      d.ore==null?"":d.ore,function(){
-        d.ore=this.value===""?0:+this.value;salva("presidi",r.id,d);render();}),"c-ore");
+    k.body.appendChild(tit);
+    var tm=document.createElement("div");tm.className="cline";
+    tm.appendChild(mkSpan("Inizio"));
+    tm.appendChild(apriPicker(mkInput({type:"time",id:"a-i-"+r.id,"aria-label":"Inizio"},"strong",d.inizio,function(){d.inizio=this.value;ricalcola();})));
+    tm.appendChild(mkSpan("·","sep"));
+    tm.appendChild(mkSpan("Fine"));
+    tm.appendChild(apriPicker(mkInput({type:"time",id:"a-f-"+r.id,"aria-label":"Fine"},"strong",d.fine,function(){d.fine=this.value;ricalcola();})));
+    k.body.appendChild(tm);
+    var ft=document.createElement("div");ft.className="cfoot";
+    var pill=document.createElement("span");pill.className="pill";
+    pill.appendChild(mkInput({type:"number",step:"0.01",min:"0",id:"a-h-"+r.id,"aria-label":"Ore fatte"},"ore",d.ore==null?"":d.ore,function(){
+      d.ore=this.value===""?0:+this.value;salva("presidi",r.id,d);render();}));
+    pill.appendChild(mkSpan("ore"));
+    ft.appendChild(pill);
     var hint=document.createElement("span");hint.className="hint";
     var calc=oreDaOrari(d.inizio,d.fine);
     if(calc!=null&&Math.abs(calc-(+d.ore||0))>0.005){
       hint.innerHTML='<span class="flag">orologio: '+ore(calc)+"</span>";
     } else if(d.ore){ hint.textContent=hhmm(d.ore); }
-    td.appendChild(hint);
-    cell(tr,delBtn("presidi",r.id),"num");
-    body.appendChild(tr);
+    ft.appendChild(hint);
+    k.body.appendChild(ft);
+    k.card.appendChild(delBtn("presidi",r.id));
+    body.appendChild(k.card);
   });
   var h=monteOre(S.mese);
   el("audOre").textContent=ore(h);
