@@ -332,6 +332,40 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
   .ramt,.ramt input{font-size:21px}
   .rlogo{height:32px}
 }
+
+/* ---- riepilogo stagione su telefono: mesi a tendina ---- */
+.sumlist{display:none}
+@media (max-width:620px){
+  details.summary .scroll{display:none}
+  .sumlist{display:block;border-top:1px solid var(--line)}
+  .sm{border-bottom:1px solid var(--line)}
+  .sm>summary{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) auto 18px;align-items:center;gap:0 12px;
+    padding:13px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .sm>summary::-webkit-details-marker{display:none}
+  .sm-mese{font-family:var(--display);font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.03em;line-height:1.1}
+  .sm-sub{display:block;font-family:var(--body);font-weight:400;font-size:13px;color:var(--ink-2);text-transform:none;letter-spacing:0}
+  .sm-amt{font-family:var(--display);font-weight:700;font-size:21px;font-variant-numeric:tabular-nums;color:var(--acc)}
+  .sm-bar{display:block;height:5px;border-radius:99px;background:var(--line);margin-top:7px;overflow:hidden;max-width:220px}
+  .sm-bar span{display:block;height:100%;border-radius:99px;background:var(--acc);opacity:.55}
+  .sm-bar.best span{opacity:1}
+  .sm-chev{width:9px;height:9px;border-right:2px solid var(--ink-3);border-bottom:2px solid var(--ink-3);transform:rotate(45deg);
+    margin-top:-5px;justify-self:center;transition:transform .2s}
+  .sm[open] .sm-chev{transform:rotate(225deg);margin-top:4px}
+  .sm[open]>summary{background:var(--acc-soft)}
+  .sm-body{padding:4px 14px 12px;background:var(--surface-2)}
+  .sm-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:0 10px;align-items:baseline;padding:8px 0;
+    border-bottom:1px dashed var(--line);font-size:14px}
+  .sm-row.nodate{grid-template-columns:minmax(0,1fr) auto}
+  .sm-d{color:var(--ink-2);font-variant-numeric:tabular-nums;font-size:13px}
+  .sm-t{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+  .sm-t small{display:block;font-weight:400;color:var(--ink-2);font-size:12px}
+  .sm-v{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+  .sm-go{margin-top:10px;width:100%}
+  .sm-tot{display:flex;justify-content:space-between;align-items:baseline;padding:13px 14px;font-weight:700}
+  .sm-tot b{font-family:var(--display);font-size:23px;font-variant-numeric:tabular-nums}
+  .sm-empty{padding:16px 14px;color:var(--ink-2);font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){.sm-chev{transition:none}}
 .login{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px}
 .login[hidden]{display:none}
 .login-in{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 18px;display:grid;gap:12px;justify-items:center;text-align:center}
@@ -469,6 +503,7 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
         <tfoot><tr id="sumFoot"></tr></tfoot>
       </table>
     </div>
+    <div class="sumlist" id="sumList"></div>
   </details>
 
   <div class="bar">
@@ -891,7 +926,7 @@ function renderTiles(){
   }
 }
 
-function renderSummary(){
+function renderSummaryTable(){
   var head=el("sumHead"),body=el("sumBody"),foot=el("sumFoot");
   head.textContent="";body.textContent="";foot.textContent="";
   var tgi=S.vista==="tgi";
@@ -1001,6 +1036,66 @@ function renderRecap(){
   if(document.activeElement!==fd)fd.value=f.dal||"";
   [fn,fi,fd].forEach(function(i){i.readOnly=!S.canWrite});
 }
+
+var sumAperti={};
+function renderSumList(){
+  var box=el("sumList");box.textContent="";
+  var v=S.vista,tot=0,n=0,items=[];
+  function dd(iso){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");if(!m)return "";var t=new Date(+m[1],+m[2]-1,+m[3]);return GG_BREVI[t.getDay()]+" "+m[3]+"/"+m[2]}
+  function riga(body,data,tit,sub,val){
+    var r=document.createElement("div");r.className="sm-row"+(data==null?" nodate":"");
+    if(data!=null)r.appendChild(mkSpan(data,"sm-d"));
+    var t=mkSpan(tit||"—","sm-t");if(sub){var s=document.createElement("small");s.textContent=sub;t.appendChild(s)}
+    r.appendChild(t);r.appendChild(mkSpan(val,"sm-v"));body.appendChild(r);
+  }
+  mesiStagione(S.anno).forEach(function(k){
+    var amt,sub,fill;
+    if(v==="tgi"){
+      var rows=righeMese(S.partite,k);if(!rows.length)return;
+      amt=totaleTgi(k);sub=rows.length+(rows.length===1?" partita":" partite");
+      fill=function(b){rows.forEach(function(r){riga(b,dd(r.d.data),r.d.partita,[r.d.competizione,r.d.giornata&&/^\d/.test(r.d.giornata)?"giornata "+r.d.giornata:r.d.giornata].filter(Boolean).join(" · "),money(+r.d.importo||0))})};
+    } else if(v==="aud"){
+      var h=monteOre(k);if(!h)return;
+      var pr=righeMese(S.presidi,k);
+      amt=compenso(h);sub=ore(h)+" ore · "+(h>30?"28":"25")+" €/ora";
+      fill=function(b){pr.forEach(function(r){riga(b,dd(r.d.data),r.d.evento,(r.d.inizio&&r.d.fine)?r.d.inizio+" – "+r.d.fine:"",ore(+r.d.ore||0)+" h")})};
+    } else {
+      var x=recapMese(k);if(!x.tot)return;
+      amt=x.tot;var al=altreMese(k);
+      sub=[x.t?"TGI":"",x.a?"Leading":"",x.f?"fissa":"",al.length?(al.length===1?"1 altra":al.length+" altre"):""].filter(Boolean).join(" · ");
+      fill=function(b){
+        if(x.t)var np=righeMese(S.partite,k).length;riga(b,null,"TGI Sport",np+(np===1?" partita":" partite"),money(x.t));
+        if(x.a)riga(b,null,"Leading Technologies",ore(monteOre(k))+" ore",money(x.a));
+        if(x.f)riga(b,null,S.recap.fisso.nome||"Entrata fissa","fissa",money(x.f));
+        al.forEach(function(e){riga(b,null,e.d.da||"Entrata",null,money(+e.d.importo||0))});
+      };
+    }
+    tot+=amt;n++;items.push({k:k,amt:amt,sub:sub,fill:fill});
+  });
+  var max=items.reduce(function(m,i){return Math.max(m,i.amt)},0);
+  items.forEach(function(it){
+    var k=it.k,amt=it.amt,sub=it.sub,fill=it.fill;
+    var d=document.createElement("details");d.className="sm";
+    var key=v+k;if(sumAperti[key])d.open=true;
+    d.addEventListener("toggle",function(){sumAperti[key]=d.open});
+    var s=document.createElement("summary");
+    var m=mkSpan(labelMese(k),"sm-mese");m.appendChild(mkSpan(sub,"sm-sub"));
+    var bar=mkSpan("","sm-bar"),fillb=mkSpan("","");fillb.style.width=(max?Math.max(3,amt/max*100):0)+"%";
+    if(amt===max&&items.length>1)bar.classList.add("best");
+    bar.appendChild(fillb);m.appendChild(bar);
+    s.appendChild(m);s.appendChild(mkSpan(money(amt),"sm-amt"));s.appendChild(mkSpan("","sm-chev"));
+    d.appendChild(s);
+    var b=document.createElement("div");b.className="sm-body";fill(b);
+    var go=document.createElement("button");go.type="button";go.className="btn sm-go";go.textContent="Apri "+labelMese(k);
+    go.addEventListener("click",function(){S.mese=k;render();window.scrollTo({top:0,behavior:"smooth"})});
+    b.appendChild(go);d.appendChild(b);box.appendChild(d);
+  });
+  if(!n){box.appendChild(mkSpan("Ancora nessun dato in questa stagione.","sm-empty"));return}
+  var t=document.createElement("div");t.className="sm-tot";
+  t.appendChild(mkSpan("Stagione "+S.anno+"/"+(S.anno+1)));t.appendChild(Object.assign(document.createElement("b"),{textContent:money(tot)}));
+  box.appendChild(t);
+}
+function renderSummary(){renderSummaryTable();renderSumList()}
 
 function render(){renderMonths();renderTiles();renderTgi();renderAud();renderRecap();renderSummary()}
 

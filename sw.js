@@ -1,6 +1,6 @@
 // Service worker: tiene l'app disponibile anche senza rete.
 // Cambiare VERSION a ogni pubblicazione, così i telefoni scaricano la versione nuova.
-const VERSION = 'cp-v8';
+const VERSION = 'cp-v9';
 const SHELL = [
   './', 'index.html', 'config.js', 'manifest.webmanifest',
   'vendor/firebase-app-compat.js', 'vendor/firebase-auth-compat.js', 'vendor/firebase-firestore-compat.js',
