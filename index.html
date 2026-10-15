@@ -1386,10 +1386,15 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
     }
     var mailLetta=false,autoFatto=false;
     function provaMail(){if(!autoFatto&&mailLetta&&S.ready){autoFatto=true;if(MAIL.url)controllaMail(false)}}
-    unsubs.push(FS.collection("partite").onSnapshot(function(s){
-      var m={};s.docs.forEach(function(d){m[d.id]=Object.assign({},d.data())});
-      var primo=!S.ready;S.partite=m;S.ready=true;render();
-      if(primo)stato(s.metadata.fromCache?"Archivio offline: si aggiorna quando torna la rete.":"Archivio collegato.");
+    var online=null;
+    unsubs.push(FS.collection("partite").onSnapshot({includeMetadataChanges:true},function(s){
+      var primo=!S.ready;
+      if(primo||s.docChanges().length){
+        var m={};s.docs.forEach(function(d){m[d.id]=Object.assign({},d.data())});
+        S.partite=m;S.ready=true;render();
+      }
+      var on=!s.metadata.fromCache;
+      if(on!==online){online=on;stato(on?"Archivio collegato.":"Archivio offline: si aggiorna quando torna la rete.")}
       provaMail();
     },onErr));
     unsubs.push(FS.collection("presidi").onSnapshot(function(s){
