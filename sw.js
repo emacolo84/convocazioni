@@ -1,6 +1,6 @@
 // Service worker: tiene l'app disponibile anche senza rete.
 // Cambiare VERSION a ogni pubblicazione, così i telefoni scaricano la versione nuova.
-const VERSION = 'cp-v9';
+const VERSION = 'cp-v10';
 const SHELL = [
   './', 'index.html', 'config.js', 'manifest.webmanifest',
   'vendor/firebase-app-compat.js', 'vendor/firebase-auth-compat.js', 'vendor/firebase-firestore-compat.js',
@@ -8,7 +8,7 @@ const SHELL = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -33,7 +33,8 @@ self.addEventListener('fetch', e => {
       if (hit) return hit;
     }
     try {
-      const res = await fetch(req);
+      // Stessa origine: chiede sempre al server se c'è una versione nuova (GitHub tiene i file in cache 10 minuti).
+      const res = await fetch(req, url.origin === self.location.origin ? { cache: 'no-cache' } : undefined);
       if (res && (res.ok || res.type === 'opaque')) cache.put(req, res.clone());
       return res;
     } catch (err) {
