@@ -1355,6 +1355,43 @@ function controllaMail(manuale){
 }
 function aggiornaMailBtn(){
   var b=el("mailBtn");b.hidden=false;b.textContent=MAIL.url?"Controlla la mail":"Collega Gmail";
+  var c=el("calBtn");if(c)c.hidden=!MAIL.url;
+}
+
+/* ------------------------- calendari (Google + iPhone) tramite lo stesso script ------------------------- */
+var CAL={attivo:false,timer:null,inCorso:false,ancora:false,fatto:false};
+function oggiIso(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function syncCalendari(manuale){
+  if(!MAIL.url){if(manuale)stato("Prima collega lo script Google con il pulsante Collega Gmail.");return}
+  if(!CAL.attivo&&!manuale)return;
+  if(CAL.inCorso){CAL.ancora=true;return}
+  var oggi=oggiIso(),P=[],A=[],id;
+  for(id in S.partite){var p=S.partite[id];if(p&&p.data>=oggi&&p.orario&&p.partita)P.push({id:id,data:p.data,orario:p.orario,partita:p.partita})}
+  for(id in S.presidi){var a=S.presidi[id];if(a&&a.data>=oggi&&a.inizio&&a.fine)A.push({id:id,data:a.data,inizio:a.inizio,fine:a.fine,evento:a.evento||""})}
+  CAL.inCorso=true;var b=el("calBtn");if(b)b.disabled=true;
+  if(manuale)stato("Aggiorno i calendari…");
+  fetch(MAIL.url,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify({azione:"calendari",da:oggi,iphone:true,partite:P,presidi:A})})
+  .then(function(r){if(!r.ok)throw new Error("http");return r.text()})
+  .then(function(t){
+    var res;try{res=JSON.parse(t)}catch(e){throw new Error("vecchio")}
+    if(!res||res.messages)throw new Error("vecchio");
+    if(!res.ok)throw new Error(res.errore||"errore");
+    if(!CAL.attivo){CAL.attivo=true;if(S.db&&S.canWrite)S.db.doc("config/cal").set({attivo:true},{merge:true}).catch(function(){})}
+    var n=0;["condiviso","iphone"].forEach(function(k){var x=res[k];if(x)n+=x.creati+x.aggiornati+x.cancellati});
+    if(manuale||n)stato(n?"Calendari aggiornati: "+n+(n===1?" evento sistemato.":" eventi sistemati."):"I calendari sono già aggiornati.");
+  })
+  .catch(function(e){
+    var m=e&&e.message;
+    stato(navigator.onLine===false?"Sei offline: aggiorno i calendari quando torna la rete."
+      :m==="vecchio"?"Lo script Google non sa ancora scrivere sui calendari: ripubblicalo come nuova versione."
+      :/calendario/i.test(m||"")?m:"Non sono riuscito ad aggiornare i calendari. Riprova più tardi.");
+  })
+  .then(function(){CAL.inCorso=false;if(b)b.disabled=false;if(CAL.ancora){CAL.ancora=false;programmaCal()}});
+}
+function programmaCal(){
+  if(!CAL.attivo||!MAIL.url)return;
+  clearTimeout(CAL.timer);CAL.timer=setTimeout(function(){syncCalendari(false)},4000);
 }
 function renderInbox(){
   var box=el("inbox"),ul=el("inboxList");ul.textContent="";
@@ -1411,6 +1448,14 @@ function scarica(blob,nome){
   document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);
 }
 function usaDownloads(){return Promise.resolve({save:function(o){return salvaFile(o.filename,o.data)}})}
+
+/* ------------------------- pulsante calendari ------------------------- */
+(function(){
+  var b=document.createElement("button");b.className="btn";b.id="calBtn";b.type="button";b.hidden=true;
+  b.textContent="Aggiorna calendari";b.title="Scrive partite e presidi da oggi in poi su Google Calendar e sul calendario per l'iPhone";
+  b.addEventListener("click",function(){syncCalendari(true)});
+  var e=el("exportBtn");e.parentNode.insertBefore(b,e.nextSibling);
+})();
 
 /* ------------------------- backup ------------------------- */
 el("backupBtn").addEventListener("click",function(){
@@ -1487,6 +1532,7 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
       if(primo||s.docChanges().length){
         var m={};s.docs.forEach(function(d){m[d.id]=Object.assign({},d.data())});
         S.partite=m;S.ready=true;render();
+        if(!primo&&s.metadata.hasPendingWrites)programmaCal();
       }
       var on=!s.metadata.fromCache;
       if(on!==online){online=on;stato(on?"Archivio collegato.":"Archivio offline: si aggiorna quando torna la rete.")}
@@ -1495,7 +1541,13 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
     unsubs.push(FS.collection("presidi").onSnapshot(function(s){
       var m={};s.docs.forEach(function(d){m[d.id]=Object.assign({},d.data())});
       S.presidi=m;render();
+      if(s.metadata.hasPendingWrites)programmaCal();
     },onErr));
+    unsubs.push(FS.doc("config/cal").onSnapshot(function(s){
+      var v=(s.exists&&s.data())||{};
+      CAL.attivo=!!v.attivo;
+      if(CAL.attivo&&!CAL.fatto&&!s.metadata.fromCache){CAL.fatto=true;setTimeout(function(){if(S.ready)syncCalendari(false)},3000)}
+    },function(){}));
     unsubs.push(FS.doc("config/mail").onSnapshot(function(s){
       var v=(s.exists&&s.data())||{};
       if(Array.isArray(v.ignorate))MAIL.ignorate=v.ignorate;
