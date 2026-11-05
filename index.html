@@ -402,7 +402,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 <header class="top">
   <div class="wrap">
     <div class="titlerow">
-      <h1>Convocazioni e presidi</h1>
+      <h1 id="pageTit">Convocazioni</h1>
       <span class="brand only-tgi" id="brandTgi"></span>
       <span class="brand only-aud" id="brandAud" hidden></span>
       <span class="season">
@@ -1137,6 +1137,7 @@ function render(){renderMonths();renderTiles();renderTgi();renderAud();renderRec
 function setVista(v){
   S.vista=(v==="aud"||v==="recap")?v:"tgi";
   document.body.setAttribute("data-view",S.vista);
+  el("pageTit").textContent={tgi:"Convocazioni",aud:"Presidi",recap:"Riepilogo"}[S.vista];
   [].forEach.call(document.querySelectorAll("#tabbar .tab"),function(b){
     if(b.getAttribute("data-vista")===S.vista)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
   try{localStorage.setItem("vista",S.vista)}catch(e){}
