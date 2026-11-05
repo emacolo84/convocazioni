@@ -373,6 +373,20 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
   .sm-empty{padding:16px 14px;color:var(--ink-2);font-size:13px}
 }
 @media (prefers-reduced-motion:reduce){.sm-chev{transition:none}}
+
+/* ---- barra delle pagine, sempre visibile in basso ---- */
+body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);
+  background:color-mix(in srgb,var(--surface) 92%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);padding:6px max(8px,calc((100vw - 640px)/2)) calc(6px + env(safe-area-inset-bottom,0px))}
+.tab{display:grid;justify-items:center;gap:3px;border:0;background:transparent;color:var(--ink-3);cursor:pointer;
+  padding:6px 4px 4px;border-radius:12px;font-family:var(--display);font-weight:700;font-size:13.5px;letter-spacing:.08em;
+  text-transform:uppercase;-webkit-tap-highlight-color:transparent}
+.tab svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab:hover{color:var(--ink-2)}
+.tab[aria-current="page"]{color:var(--tc)}
+.tab[aria-current="page"] svg{stroke-width:2.3}
+.tab:focus-visible{outline:2px solid var(--tc);outline-offset:-2px}
 .login{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;place-items:center;padding:24px 16px}
 .login[hidden]{display:none}
 .login-in{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 18px;display:grid;gap:12px;justify-items:center;text-align:center}
@@ -389,13 +403,6 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
   <div class="wrap">
     <div class="titlerow">
       <h1>Convocazioni e presidi</h1>
-      <label class="collab" for="collab" title="Scegli la collaborazione">
-        <select id="collab" aria-label="Collaborazione">
-          <option value="tgi">TGI Sport</option>
-          <option value="aud">Leading Technologies</option>
-          <option value="recap">Recap mensile</option>
-        </select>
-      </label>
       <span class="brand only-tgi" id="brandTgi"></span>
       <span class="brand only-aud" id="brandAud" hidden></span>
       <span class="season">
@@ -525,6 +532,18 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
   <div id="login" class="login" hidden></div>
   <div class="ro-banner" id="roBanner" hidden>Stai guardando l'archivio in sola lettura: le modifiche non vengono salvate.</div>
 </div>
+
+<nav class="tabbar" id="tabbar" aria-label="Pagine">
+  <button type="button" class="tab" data-vista="tgi" style="--tc:var(--tgi)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4M10.5 8.2v3.6l3-1.8z"/></svg>
+    <span>Virtual</span></button>
+  <button type="button" class="tab" data-vista="aud" style="--tc:var(--audio)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg>
+    <span>Presidi</span></button>
+  <button type="button" class="tab" data-vista="recap" style="--tc:var(--ok)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/></svg>
+    <span>Riepilogo</span></button>
+</nav>
 
 <script src="config.js"></script>
 <script src="vendor/firebase-app-compat.js"></script>
@@ -1118,11 +1137,13 @@ function render(){renderMonths();renderTiles();renderTgi();renderAud();renderRec
 function setVista(v){
   S.vista=(v==="aud"||v==="recap")?v:"tgi";
   document.body.setAttribute("data-view",S.vista);
-  el("collab").value=S.vista;
+  [].forEach.call(document.querySelectorAll("#tabbar .tab"),function(b){
+    if(b.getAttribute("data-vista")===S.vista)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
   try{localStorage.setItem("vista",S.vista)}catch(e){}
   render();
 }
-el("collab").addEventListener("change",function(){setVista(this.value)});
+[].forEach.call(document.querySelectorAll("#tabbar .tab"),function(b){b.addEventListener("click",function(){
+  var v=b.getAttribute("data-vista");if(v!==S.vista){setVista(v);window.scrollTo(0,0)}});});
 (function(){var v=null;try{v=localStorage.getItem("vista")}catch(e){} setVista(v||"tgi")})();
 el("prevS").addEventListener("click",function(){S.anno--;S.mese=mesiStagione(S.anno)[0];render()});
 el("nextS").addEventListener("click",function(){S.anno++;S.mese=mesiStagione(S.anno)[0];render()});
