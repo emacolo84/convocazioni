@@ -374,6 +374,12 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
 }
 @media (prefers-reduced-motion:reduce){.sm-chev{transition:none}}
 
+/* ---- intestazioni elenco: conteggio e pulsante a sinistra; CSV solo nel riepilogo ---- */
+.p-tgi .phead,.p-aud .phead{justify-content:flex-start}
+.p-tgi .phead h2,.p-aud .phead h2{flex:1 0 100%}
+.p-tgi .phead .right,.p-aud .phead .right{margin-left:0}
+body:not([data-view="recap"]) #exportBtn{display:none}
+
 /* ---- barra delle pagine, sempre visibile in basso ---- */
 body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);
@@ -444,7 +450,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 
   <section class="panel p-tgi only-tgi">
     <div class="phead">
-      <h2>Virtualizzazioni partite</h2><span class="chip c-tgi">TGI Sport</span>
+      <h2>Elenco partite</h2>
       <span class="right" id="tgiCount"></span>
       <button class="btn" id="mailBtn" type="button" hidden>Controlla la mail</button>
     </div>
@@ -458,7 +464,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 
   <section class="panel p-aud only-aud">
     <div class="phead">
-      <h2>Ore presidio audio</h2><span class="chip c-aud">Leading Technologies</span>
+      <h2>Elenco partite</h2>
       <span class="right" id="audCount"></span>
       <button class="btn" id="shotBtn" type="button" title="Immagine dei presidi del mese da mandare al collega">Screen presidi</button>
     </div>
@@ -940,7 +946,7 @@ function renderTiles(){
     el("t1Foot").textContent=labelMese(S.mese)+" · netto";
     el("t2Lab").textContent="Convocazioni nel mese";
     el("t2Big").textContent=String(np);
-    el("t2Foot").textContent=np?"a 140 € l'una, il tennis a 210 €":"nessuna convocazione";
+    el("t2Foot").textContent=np?"":"nessuna convocazione";
     el("t3Lab").textContent="Stagione "+stag;
     el("t3Big").textContent=money(st.t);
     el("t3Foot").textContent=st.np+(st.np===1?" partita":" partite");
@@ -1252,32 +1258,60 @@ function dataLunga(iso){
 el("shotBtn").addEventListener("click",function(){
   var rows=righeMese(S.presidi,S.mese);
   if(!rows.length){stato("Nessun presidio da fotografare in questo mese.");return}
-  var W=760,pad=28,rh=36,top=96,H=top+rows.length*rh+pad+8,sc=2;
+  /* formato verticale, da telefono: si legge bene su WhatsApp */
+  function logoSrc(ev){
+    if(LOGHI._seriea&&/serie\s*a(?![a-z])/i.test(ev||""))return LOGHI._seriea;
+    var cu=coppaUefa(ev);return cu?LOGHI._uefa[cu.k].lt:null;
+  }
+  var srcs={};rows.forEach(function(r){var u=logoSrc(r.d.evento);if(u)srcs[u]=1});
+  var imgs={};
+  Promise.all(Object.keys(srcs).map(function(u){return new Promise(function(ok){
+    var im=new Image();im.onload=function(){imgs[u]=im;ok()};im.onerror=function(){ok()};im.src=u;})}))
+  .then(function(){return document.fonts&&document.fonts.ready}).then(function(){disegna()});
+  function disegna(){
+  var W=540,pad=20,rh=100,top=104,H=top+rows.length*rh+pad,sc=3;
   var cv=document.createElement("canvas");cv.width=W*sc;cv.height=H*sc;
   var g=cv.getContext("2d");g.scale(sc,sc);
-  var ink="#141c26",ink2="#5a6878",line="#d4dae3",acc="#b25d12";
-  g.fillStyle="#ffffff";g.fillRect(0,0,W,H);
-  g.fillStyle=acc;g.fillRect(0,0,W,5);
-  g.fillStyle=ink;g.font="700 26px 'Barlow Condensed', sans-serif";g.textBaseline="alphabetic";
-  g.fillText(("Presidi audio · "+labelMese(S.mese)).toUpperCase(),pad,44);
-  g.fillStyle=ink2;g.font="500 13px Archivo, sans-serif";
-  g.fillText("Leading Technologies · Emanuele Colognese",pad,64);
-  var X=[pad,pad+150,W-pad-250,W-pad-130,W-pad];
-  g.font="600 11.5px Archivo, sans-serif";g.fillStyle=ink2;
-  ["DATA","EVENTO","ORARIO"].forEach(function(t,i){g.fillText(t,X[i],top-8)});
-  g.textAlign="right";g.fillText("ORE",X[4],top-8);g.textAlign="left";
-  g.strokeStyle=line;g.lineWidth=1;g.beginPath();g.moveTo(pad,top+.5);g.lineTo(W-pad,top+.5);g.stroke();
+  var ink="#141c26",ink2="#5a6878",line="#d4dae3",acc="#b25d12",soft="#fbeedf";
+  function rr(x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);
+    g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();g.fill()}
   function clip(t,w){t=String(t||"");if(g.measureText(t).width<=w)return t;
     while(t.length&&g.measureText(t+"…").width>w)t=t.slice(0,-1);return t+"…"}
+  g.fillStyle="#ffffff";g.fillRect(0,0,W,H);
+  g.fillStyle=acc;g.fillRect(0,0,W,6);
+  g.textBaseline="alphabetic";g.textAlign="left";
+  g.fillStyle=ink;g.font="700 30px 'Barlow Condensed', sans-serif";
+  g.fillText(("Presidi · "+labelMese(S.mese)).toUpperCase(),pad,50);
+  g.fillStyle=ink2;g.font="500 14px Archivo, sans-serif";
+  g.fillText("Leading Technologies · Emanuele Colognese",pad,74);
+  g.strokeStyle=line;g.lineWidth=1;g.beginPath();g.moveTo(0,top-.5);g.lineTo(W,top-.5);g.stroke();
   rows.forEach(function(r,i){
-    var y=top+i*rh,d=r.d,base=y+rh/2+5;
-    if(i%2){g.fillStyle="#f6f8fb";g.fillRect(pad,y+1,W-2*pad,rh-1)}
-    g.fillStyle=ink;g.font="500 14px Archivo, sans-serif";
-    g.fillText(dataLunga(d.data),X[0]+6,base);
-    g.fillText(clip(d.evento,X[2]-X[1]-12),X[1],base);
-    g.fillText((d.inizio||"")+(d.fine?" – "+d.fine:""),X[2],base);
-    g.textAlign="right";g.font="600 14px Archivo, sans-serif";g.fillText(ore(d.ore),X[4]-6,base);g.textAlign="left";
-    g.strokeStyle=line;g.beginPath();g.moveTo(pad,y+rh+.5);g.lineTo(W-pad,y+rh+.5);g.stroke();
+    var y=top+i*rh,d=r.d,tx=pad+66+16;
+    var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d.data||"");
+    g.fillStyle=soft;rr(pad,y+14,66,72,14);
+    g.fillStyle=acc;g.textAlign="center";
+    if(m){var dt=new Date(+m[1],+m[2]-1,+m[3]);
+      g.font="600 13px Archivo, sans-serif";g.fillText(GG_BREVI[dt.getDay()],pad+33,y+32);
+      g.font="700 34px 'Barlow Condensed', sans-serif";g.fillText(String(+m[3]),pad+33,y+64);
+      g.font="600 13px Archivo, sans-serif";g.fillText(MM_BREVI[+m[2]-1],pad+33,y+80);
+    } else {g.font="600 12px Archivo, sans-serif";g.fillText("senza data",pad+33,y+54)}
+    g.textAlign="left";
+    /* ore a destra */
+    var oreT=ore(d.ore)+" ore";g.font="700 15px Archivo, sans-serif";
+    var pw=g.measureText(oreT).width+24,px=W-pad-pw;
+    g.fillStyle=soft;rr(px,y+36,pw,30,15);
+    g.fillStyle=acc;g.textAlign="center";g.fillText(oreT,px+pw/2,y+56);g.textAlign="left";
+    /* evento con logo */
+    var x=tx,im=imgs[logoSrc(d.evento)];
+    if(im){var lh=26,lw=im.width*lh/im.height;g.drawImage(im,x,y+22,lw,lh);x+=lw+8}
+    g.fillStyle=ink;g.font="700 19px Archivo, sans-serif";
+    g.fillText(clip(d.evento||"Presidio",px-12-x),x,y+42);
+    /* orari */
+    g.font="400 15px Archivo, sans-serif";g.fillStyle=ink2;x=tx;
+    function parte(t,f,c){g.font=f;g.fillStyle=c;g.fillText(t,x,y+70);x+=g.measureText(t).width}
+    parte("Inizio ","400 15px Archivo, sans-serif",ink2);parte(d.inizio||"—","700 15px Archivo, sans-serif",ink);
+    parte("   ·   Fine ","400 15px Archivo, sans-serif",ink2);parte(d.fine||"—","700 15px Archivo, sans-serif",ink);
+    if(i<rows.length-1){g.strokeStyle=line;g.beginPath();g.moveTo(pad,y+rh-.5);g.lineTo(W-pad,y+rh-.5);g.stroke()}
   });
   cv.toBlob(function(blob){
     if(!blob){stato("Non sono riuscito a creare l'immagine.");return}
@@ -1287,6 +1321,7 @@ el("shotBtn").addEventListener("click",function(){
       return dl.save({filename:nome,data:blob}).then(function(){stato("Immagine pronta: "+nome)});
     }).catch(function(){stato("Download annullato.")});
   },"image/png");
+  }
 });
 
 /* ------------------------- convocazioni dalla mail TGI ------------------------- */
