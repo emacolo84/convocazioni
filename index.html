@@ -1406,7 +1406,8 @@ function controllaMail(manuale){
   }
   el("mailBtn").disabled=true;stato("Controllo la mail di TGI Sport…");
   return fetch(MAIL.url,{redirect:"follow"}).then(function(r){
-    if(!r.ok)throw new Error("http");return r.json();
+    if(!r.ok)throw new Error("http");
+    return r.text().then(function(t){try{return JSON.parse(t)}catch(e){throw new Error("autorizza")}});
   }).then(function(res){
     if(!res||!Array.isArray(res.messages))throw new Error("formato");
     var vis={},trov=[],gia=giaPresenti();
@@ -1421,8 +1422,9 @@ function controllaMail(manuale){
     trov.sort(function(a,b){return (a.data+a.orario)<(b.data+b.orario)?-1:1});
     MAIL.trovate=trov;MAIL.controllata=true;renderInbox();
     stato(trov.length===1?"Nella mail c'è 1 convocazione nuova.":trov.length?"Nella mail ci sono "+trov.length+" convocazioni nuove.":"Nessuna convocazione nuova nella mail.");
-  }).catch(function(){
-    stato(navigator.onLine===false?"Sei offline: controllo la mail quando torna la rete.":"Non sono riuscito a leggere la mail. Se succede sempre, ricollega lo script Gmail.");
+  }).catch(function(e){
+    stato(navigator.onLine===false?"Sei offline: controllo la mail quando torna la rete."
+      :e&&e.message==="autorizza"?"Lo script Google va riautorizzato (succede circa ogni settimana): dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.":"Non sono riuscito a leggere la mail. Di solito basta riautorizzare lo script Google: dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.");
   }).then(function(){el("mailBtn").disabled=false});
 }
 function aggiornaMailBtn(){
@@ -1446,7 +1448,7 @@ function syncCalendari(manuale){
     body:JSON.stringify({azione:"calendari",da:oggi,iphone:true,partite:P,presidi:A})})
   .then(function(r){if(!r.ok)throw new Error("http");return r.text()})
   .then(function(t){
-    var res;try{res=JSON.parse(t)}catch(e){throw new Error("vecchio")}
+    var res;try{res=JSON.parse(t)}catch(e){throw new Error("autorizza")}
     if(!res||res.messages)throw new Error("vecchio");
     if(!res.ok)throw new Error(res.errore||"errore");
     if(!CAL.attivo){CAL.attivo=true;if(S.db&&S.canWrite)S.db.doc("config/cal").set({attivo:true},{merge:true}).catch(function(){})}
@@ -1456,8 +1458,9 @@ function syncCalendari(manuale){
   .catch(function(e){
     var m=e&&e.message;
     stato(navigator.onLine===false?"Sei offline: aggiorno i calendari quando torna la rete."
+      :m==="autorizza"?"Lo script Google va riautorizzato (succede circa ogni settimana): dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui."
       :m==="vecchio"?"Lo script Google non sa ancora scrivere sui calendari: ripubblicalo come nuova versione."
-      :/calendario/i.test(m||"")?m:"Non sono riuscito ad aggiornare i calendari. Riprova più tardi.");
+      :/calendario/i.test(m||"")?m:"Non sono riuscito ad aggiornare i calendari. Se succede sempre, riautorizza lo script Google: dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.");
   })
   .then(function(){CAL.inCorso=false;if(b)b.disabled=false;if(CAL.ancora){CAL.ancora=false;programmaCal()}});
 }
