@@ -1,6 +1,7 @@
 // Script Google per l'app Convocazioni e presidi.
-// Legge le convocazioni che TGI Sport manda alla tua Gmail
-// e le passa all'app, che te le propone da aggiungere.
+// Legge le convocazioni che TGI Sport manda alla tua Gmail e i tuoi turni
+// sul calendario condiviso "Presidio Sky/EIT", e li passa all'app,
+// che te li propone da aggiungere.
 // Pubblicalo come "App web", con "Esegui come: Me" e "Chi ha accesso: Chiunque".
 // L'indirizzo dell'app web va incollato una volta sola nell'app (pulsante "Collega Gmail").
 // Lo script risponde solo a chi conosce la parola segreta: la crea la funzione creaChiave
@@ -31,6 +32,7 @@ function creaChiave() {
 
 function doGet(e) {
   if (!chiaveOk(e && e.parameter && e.parameter.k)) return risposta({ errore: 'chiave' });
+  if (e.parameter.cosa === 'presidi') return risposta(presidiDalCalendario(e.parameter.dal));
   const messaggi = [];
   GmailApp.search('from:(' + MITTENTI.join(' OR ') + ') newer_than:120d', 0, 50).forEach(function (thread) {
     thread.getMessages().forEach(function (m) {
@@ -63,6 +65,48 @@ function tabella(html) {
     if (!celle[7] || /colognese|emanuele/i.test(celle[7])) righe.push('| ' + celle.join(' | ') + ' |');
   }
   return tabellaTrovata ? righe.join('\n') : null;
+}
+
+// ------------------------------------------------------------------
+// Presidi: legge il calendario condiviso "Presidio Sky/EIT" e passa all'app
+// solo i turni con il tuo cognome tra parentesi dopo EIT,
+// es. "Presidio Serie A EIT(Colognese)//SKY(Tomelli)".
+// L'app te li propone da aggiungere, come le convocazioni della mail.
+// ------------------------------------------------------------------
+const CAL_PRESIDI = 'Presidio Sky/EIT';
+const COGNOME = /EIT\s*\([^)]*colognese[^)]*\)/i;
+const GIORNI_AVANTI = 180;
+
+function calendarioPresidi() {
+  const c = CalendarApp.getCalendarsByName(CAL_PRESIDI)[0];
+  if (c) return c;
+  // se nella tua lista ha un nome leggermente diverso, prende il primo che contiene "presidio"
+  const altri = CalendarApp.getAllCalendars().filter(function (x) { return /presidio/i.test(x.getName()); });
+  if (altri.length) return altri[0];
+  throw new Error('Non trovo il calendario "' + CAL_PRESIDI + '"');
+}
+
+function presidiDalCalendario(dal) {
+  const tz = Session.getScriptTimeZone();
+  const da = giorno(dal, '00:00') || new Date();
+  const fino = new Date(Date.now() + GIORNI_AVANTI * 86400000);
+  if (fino <= da) return { presidi: [] };
+  const fmt = function (d, f) { return Utilities.formatDate(d, tz, f); };
+  const presidi = [];
+  calendarioPresidi().getEvents(da, fino).forEach(function (ev) {
+    const titolo = ev.getTitle() || '';
+    if (!COGNOME.test(titolo)) return;
+    const ini = ev.getStartTime(), fine = ev.getEndTime();
+    const intero = ev.isAllDayEvent();
+    presidi.push({
+      id: ev.getId() + '|' + fmt(ini, 'yyyy-MM-dd'),
+      titolo: titolo,
+      data: fmt(ini, 'yyyy-MM-dd'),
+      inizio: intero ? '' : fmt(ini, 'HH:mm'),
+      fine: intero ? '' : fmt(fine, 'HH:mm')
+    });
+  });
+  return { presidi: presidi };
 }
 
 // ------------------------------------------------------------------
@@ -173,4 +217,13 @@ function prova() {
   const k = PropertiesService.getScriptProperties().getProperty('CHIAVE');
   Logger.log(doGet({ parameter: { k: k } }).getContent().slice(0, 2000));
   Logger.log('Calendario condiviso trovato: ' + calendario(CAL_CONDIVISO, false).getName());
+  Logger.log('Calendario presidi trovato: ' + calendarioPresidi().getName());
+}
+
+// Prova dei presidi: dall'editor esegui questa funzione e guarda nel registro
+// quali turni con il tuo cognome trova da dicembre in poi.
+function provaPresidi() {
+  const r = presidiDalCalendario('2026-12-01');
+  Logger.log('Turni trovati: ' + r.presidi.length);
+  r.presidi.forEach(function (p) { Logger.log(p.data + '  ' + (p.inizio || 'tutto il giorno') + (p.fine ? '-' + p.fine : '') + '  ' + p.titolo); });
 }
