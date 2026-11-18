@@ -1325,7 +1325,15 @@ el("shotBtn").addEventListener("click",function(){
 });
 
 /* ------------------------- convocazioni dalla mail TGI ------------------------- */
-var MAIL={da:["spedatella@tgisport.com","supponor.isg@gmail.com"],dal:"2026-11-01",trovate:[],ignorate:[],controllata:false};
+var MAIL={da:["spedatella@tgisport.com","supponor.isg@gmail.com"],dal:"2026-11-01",trovate:[],ignorate:[],controllata:false,chiave:"",chiesta:false};
+/* parola segreta dello script Google: senza, lo script non risponde. Si salva in config/mail accanto all'indirizzo. */
+function chiediChiave(){
+  if(MAIL.chiesta||!S.db||!S.canWrite)return false;MAIL.chiesta=true;
+  var k=(prompt("Lo script Google ora chiede la parola segreta. Dal computer apri il progetto su script.google.com, esegui la funzione creaChiave e incolla qui la parola che compare nel registro.")||"").trim();
+  if(!k)return false;
+  MAIL.chiave=k;S.db.doc("config/mail").set({chiave:k},{merge:true}).catch(function(){});return true;
+}
+function urlMail(){return MAIL.url+(MAIL.url.indexOf("?")<0?"?":"&")+"k="+encodeURIComponent(MAIL.chiave||"")}
 var MESI_L=MESI.map(function(m){return m.toLowerCase()});
 function chiave(data,partita){return data+"|"+String(partita||"").toLowerCase().replace(/[^a-z0-9]/g,"")}
 function dataIt(t){
@@ -1405,10 +1413,11 @@ function controllaMail(manuale){
     S.db.doc("config/mail").set({url:u},{merge:true}).catch(function(){});
   }
   el("mailBtn").disabled=true;stato("Controllo la mail di TGI Sport…");
-  return fetch(MAIL.url,{redirect:"follow"}).then(function(r){
+  return fetch(urlMail(),{redirect:"follow"}).then(function(r){
     if(!r.ok)throw new Error("http");
     return r.text().then(function(t){try{return JSON.parse(t)}catch(e){throw new Error("autorizza")}});
   }).then(function(res){
+    if(res&&res.errore==="chiave")throw new Error("chiave");
     if(!res||!Array.isArray(res.messages))throw new Error("formato");
     var vis={},trov=[],gia=giaPresenti();
     res.messages.forEach(function(m){
@@ -1423,6 +1432,11 @@ function controllaMail(manuale){
     MAIL.trovate=trov;MAIL.controllata=true;renderInbox();
     stato(trov.length===1?"Nella mail c'è 1 convocazione nuova.":trov.length?"Nella mail ci sono "+trov.length+" convocazioni nuove.":"Nessuna convocazione nuova nella mail.");
   }).catch(function(e){
+    if(e&&e.message==="chiave"){
+      el("mailBtn").disabled=false;
+      if(chiediChiave())return controllaMail(manuale);
+      stato("Lo script Google chiede la parola segreta: tocca Controlla la mail e incollala.");MAIL.chiesta=false;return;
+    }
     stato(navigator.onLine===false?"Sei offline: controllo la mail quando torna la rete."
       :e&&e.message==="autorizza"?"Lo script Google va riautorizzato (succede circa ogni settimana): dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.":"Non sono riuscito a leggere la mail. Di solito basta riautorizzare lo script Google: dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.");
   }).then(function(){el("mailBtn").disabled=false});
@@ -1445,7 +1459,7 @@ function syncCalendari(manuale){
   CAL.inCorso=true;var b=el("calBtn");if(b)b.disabled=true;
   if(manuale)stato("Aggiorno i calendari…");
   fetch(MAIL.url,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify({azione:"calendari",da:oggi,iphone:true,partite:P,presidi:A})})
+    body:JSON.stringify({azione:"calendari",k:MAIL.chiave||"",da:oggi,iphone:true,partite:P,presidi:A})})
   .then(function(r){if(!r.ok)throw new Error("http");return r.text()})
   .then(function(t){
     var res;try{res=JSON.parse(t)}catch(e){throw new Error("autorizza")}
@@ -1457,6 +1471,10 @@ function syncCalendari(manuale){
   })
   .catch(function(e){
     var m=e&&e.message;
+    if(m==="chiave"){
+      if(chiediChiave()){CAL.ancora=true;return}
+      stato("Lo script Google chiede la parola segreta: tocca Aggiorna calendari e incollala.");MAIL.chiesta=false;return;
+    }
     stato(navigator.onLine===false?"Sei offline: aggiorno i calendari quando torna la rete."
       :m==="autorizza"?"Lo script Google va riautorizzato (succede circa ogni settimana): dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui."
       :m==="vecchio"?"Lo script Google non sa ancora scrivere sui calendari: ripubblicalo come nuova versione."
@@ -1626,7 +1644,7 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
     unsubs.push(FS.doc("config/mail").onSnapshot(function(s){
       var v=(s.exists&&s.data())||{};
       if(Array.isArray(v.ignorate))MAIL.ignorate=v.ignorate;
-      MAIL.url=v.url||"";aggiornaMailBtn();
+      MAIL.url=v.url||"";MAIL.chiave=v.chiave||"";aggiornaMailBtn();
       if(!s.metadata.fromCache){mailLetta=true;provaMail()}
     },function(){}));
     unsubs.push(FS.doc("config/app").onSnapshot(function(s){

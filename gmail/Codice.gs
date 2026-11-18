@@ -3,26 +3,54 @@
 // e le passa all'app, che te le propone da aggiungere.
 // Pubblicalo come "App web", con "Esegui come: Me" e "Chi ha accesso: Chiunque".
 // L'indirizzo dell'app web va incollato una volta sola nell'app (pulsante "Collega Gmail").
+// Lo script risponde solo a chi conosce la parola segreta: la crea la funzione creaChiave
+// (eseguila una volta dall'editor) e l'app la chiede la prima volta che serve.
 
 // Indirizzi da cui arrivano le convocazioni (dal 11/10/2026 anche la piattaforma TGI).
 const MITTENTI = ['spedatella@tgisport.com', 'supponor.isg@gmail.com'];
 
-function doGet() {
+// ------------------------------------------------------------------
+// Parola segreta: sta nelle proprietà dello script, mai nel codice.
+// ------------------------------------------------------------------
+function chiaveOk(k) {
+  const giusta = PropertiesService.getScriptProperties().getProperty('CHIAVE');
+  return !!giusta && typeof k === 'string' && k === giusta;
+}
+
+// Esegui questa funzione una volta dall'editor: crea la parola segreta
+// (o mostra quella già creata) e la scrive nel registro di esecuzione.
+function creaChiave() {
+  const prop = PropertiesService.getScriptProperties();
+  let k = prop.getProperty('CHIAVE');
+  if (!k) {
+    k = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+    prop.setProperty('CHIAVE', k);
+  }
+  Logger.log('Parola segreta da incollare nell\'app: ' + k);
+}
+
+function doGet(e) {
+  if (!chiaveOk(e && e.parameter && e.parameter.k)) return risposta({ errore: 'chiave' });
   const messaggi = [];
   GmailApp.search('from:(' + MITTENTI.join(' OR ') + ') newer_than:120d', 0, 50).forEach(function (thread) {
     thread.getMessages().forEach(function (m) {
       const da = m.getFrom().toLowerCase();
       if (!MITTENTI.some(function (a) { return da.indexOf(a) >= 0; })) return;
-      messaggi.push({ sender: m.getFrom(), date: m.getDate().toISOString(), body: tabella(m.getBody()) + '\n' + m.getPlainBody() });
+      // Formato vecchio (tabella): solo le righe con il tuo nome o senza operatore.
+      // Formato nuovo (una convocazione per mail): il testo della mail.
+      const righe = tabella(m.getBody());
+      messaggi.push({ sender: m.getFrom(), date: m.getDate().toISOString(), body: righe !== null ? righe : m.getPlainBody() });
     });
   });
   return ContentService.createTextOutput(JSON.stringify({ messages: messaggi }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-// Trasforma ogni riga della tabella HTML in una riga "| cella | cella | ... |".
+// Trasforma ogni riga della tabella HTML in una riga "| cella | cella | ... |",
+// tenendo solo le tue. Se la mail non ha la tabella delle convocazioni restituisce null.
 function tabella(html) {
   const righe = [];
+  let tabellaTrovata = false;
   const tr = /<tr[\s\S]*?<\/tr>/gi;
   let r;
   while ((r = tr.exec(html || ''))) {
@@ -30,9 +58,11 @@ function tabella(html) {
       return c.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
         .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\|/g, '/').replace(/\s+/g, ' ').trim();
     });
-    if (celle.length >= 7) righe.push('| ' + celle.join(' | ') + ' |');
+    if (celle.length < 7) continue;
+    tabellaTrovata = true;
+    if (!celle[7] || /colognese|emanuele/i.test(celle[7])) righe.push('| ' + celle.join(' | ') + ' |');
   }
-  return righe.join('\n');
+  return tabellaTrovata ? righe.join('\n') : null;
 }
 
 // ------------------------------------------------------------------
@@ -52,7 +82,8 @@ function doPost(e) {
   lock.waitLock(30000);
   try {
     const dati = JSON.parse(e.postData.contents);
-    if (!dati || dati.azione !== 'calendari') throw new Error('richiesta sconosciuta');
+    if (!dati || !chiaveOk(dati.k)) return risposta({ ok: false, errore: 'chiave' });
+    if (dati.azione !== 'calendari') throw new Error('richiesta sconosciuta');
     const esito = sincronizza(dati);
     return risposta(Object.assign({ ok: true }, esito));
   } catch (err) {
@@ -138,6 +169,8 @@ function giorno(d, h) {
 
 // Prova: dall'editor esegui questa funzione per dare i permessi e vedere cosa legge.
 function prova() {
-  Logger.log(doGet().getContent().slice(0, 2000));
+  creaChiave();
+  const k = PropertiesService.getScriptProperties().getProperty('CHIAVE');
+  Logger.log(doGet({ parameter: { k: k } }).getContent().slice(0, 2000));
   Logger.log('Calendario condiviso trovato: ' + calendario(CAL_CONDIVISO, false).getName());
 }
