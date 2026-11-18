@@ -78,7 +78,9 @@ const COGNOME = /EIT\s*\([^)]*colognese[^)]*\)/i;
 const GIORNI_AVANTI = 180;
 
 function calendarioPresidi() {
-  const c = CalendarApp.getCalendarsByName(CAL_PRESIDI)[0];
+  const c = CalendarApp.getCalendarsByName(CAL_PRESIDI)[0] || CalendarApp.getAllCalendars().filter(function (x) {
+    return x.getName().trim().toLowerCase() === CAL_PRESIDI.toLowerCase();
+  })[0];
   if (c) return c;
   // se nella tua lista ha un nome leggermente diverso, prende il primo che contiene "presidio"
   const altri = CalendarApp.getAllCalendars().filter(function (x) { return /presidio/i.test(x.getName()); });
@@ -223,6 +225,12 @@ function prova() {
 // Prova dei presidi: dall'editor esegui questa funzione e guarda nel registro
 // quali turni con il tuo cognome trova da dicembre in poi.
 function provaPresidi() {
+  const cal = calendarioPresidi();
+  const tutti = cal.getEvents(new Date(2026, 11, 1), new Date(Date.now() + GIORNI_AVANTI * 86400000));
+  Logger.log('Calendario letto: "' + cal.getName() + '" con ' + tutti.length + ' eventi da dicembre');
+  tutti.slice(0, 15).forEach(function (ev) {
+    Logger.log('  ' + Utilities.formatDate(ev.getStartTime(), Session.getScriptTimeZone(), 'dd/MM HH:mm') + '  ' + ev.getTitle());
+  });
   const r = presidiDalCalendario('2026-12-01');
   Logger.log('Turni trovati: ' + r.presidi.length);
   r.presidi.forEach(function (p) { Logger.log(p.data + '  ' + (p.inizio || 'tutto il giorno') + (p.fine ? '-' + p.fine : '') + '  ' + p.titolo); });
