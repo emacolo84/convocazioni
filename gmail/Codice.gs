@@ -69,11 +69,12 @@ function tabella(html) {
 
 // ------------------------------------------------------------------
 // Presidi: legge il calendario condiviso "Presidio Sky/EIT" e passa all'app
-// solo i turni con il tuo cognome nel titolo, es. "Serie A (Rossi) (Colognese)".
+// solo i turni con il tuo cognome tra parentesi dopo EIT,
+// es. "Presidio Serie A EIT(Colognese)//SKY(Tomelli)".
 // L'app te li propone da aggiungere, come le convocazioni della mail.
 // ------------------------------------------------------------------
 const CAL_PRESIDI = 'Presidio Sky/EIT';
-const COGNOME = /colognese/i;
+const COGNOME = /EIT\s*\([^)]*colognese[^)]*\)/i;
 const GIORNI_AVANTI = 180;
 
 function calendarioPresidi() {
