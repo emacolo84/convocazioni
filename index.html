@@ -465,10 +465,23 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
     </div>
   </section>
 
+  <section class="inbox only-aud" id="inboxPres" hidden>
+    <div class="phead">
+      <h2>Nuovi presidi nel calendario</h2>
+      <span class="right">da Presidio Sky/EIT</span>
+    </div>
+    <ul id="inboxPresList"></ul>
+    <div class="mailbar">
+      <button class="btn primary" id="inboxPresAdd" type="button">Aggiungi i selezionati</button>
+      <span>Togli la spunta ai turni che non fai: non te li riproporrò.</span>
+    </div>
+  </section>
+
   <section class="panel p-aud only-aud">
     <div class="phead">
       <h2>Elenco partite</h2>
       <span class="right" id="audCount"></span>
+      <button class="btn" id="presBtn" type="button" hidden>Controlla il calendario</button>
       <button class="btn" id="shotBtn" type="button" title="Immagine dei presidi del mese da mandare al collega">Screen presidi</button>
     </div>
     <div class="cards" id="audBody"></div>
@@ -1349,12 +1362,30 @@ function dataIt(t){
 }
 var ORA=/^\d{1,2}[:.]\d{2}$/;
 function oraNorm(t){var m=/^(\d{1,2})[:.](\d{2})$/.exec(String(t||"").trim());return m?pad(m[1])+":"+m[2]:""}
+/* Scrittura uniforme dei nomi: "SERIE A" -> "Serie A", "INTER" -> "Inter", "hellas verona" -> "Hellas Verona". */
+var SIGLE=["PSG","PSV","AZ","AEK","PAOK","CSKA","LASK","RB","FC","AC","AS","SS","SC","SL","BSC","AFC","OGC","SK","FK","NK","HNK","BK","IF","KRC","UEFA","FIFA","ATP","WTA","BJK","ITF","NBA","UCL","UEL","UECL"];
+var MINUSCOLE=["di","de","del","della","dei","e","ed","la","le","lo","da","van","von","y"];
+function parolaUniforme(w,i,lettereSole){
+  var u=w.toUpperCase(),l=w.toLowerCase();
+  if(SIGLE.indexOf(u.replace(/[^A-Z]/g,""))>=0&&/^[A-Za-z]+$/.test(w))return u;
+  if(lettereSole&&/^[a-z]$/i.test(w))return u;
+  if(i>0&&MINUSCOLE.indexOf(l)>=0)return l;
+  return l.charAt(0).toUpperCase()+l.slice(1);
+}
+function nomeUniforme(t,lettereSole){
+  return String(t||"").trim().replace(/\s+/g," ").split(" ").map(function(w,i){return parolaUniforme(w,i,lettereSole)}).join(" ");
+}
+function partitaUniforme(p){
+  var m=/^\s*(.+?)(\s*[-–]\s*)(.+?)\s*$/.exec(p||"");
+  return m?nomeUniforme(m[1])+m[2]+nomeUniforme(m[3]):nomeUniforme(p);
+}
+function competizioneUniforme(c){return nomeUniforme(c,true)}
 function rigaMail(c){ // [competizione, round, sport, data, partita, orario partita, orario conv., operatore]
   var data=dataIt(c[3]);
   if(!data||!/[-–]/.test(c[4]||"")||!ORA.test((c[6]||"").trim()))return null;
   if(c[7]&&!/colognese|emanuele/i.test(c[7]))return null;
-  return {data:data,competizione:(c[0]||"").trim(),giornata:(c[1]||"").trim(),sport:(c[2]||"").trim(),
-    partita:(c[4]||"").trim().replace(/\s*[-–]\s*/,"-"),orario:oraNorm(c[6])};
+  return {data:data,competizione:competizioneUniforme(c[0]),giornata:(c[1]||"").trim(),sport:(c[2]||"").trim(),
+    partita:partitaUniforme((c[4]||"").trim().replace(/\s*[-–]\s*/,"-")),orario:oraNorm(c[6])};
 }
 function leggiTabella(testo){
   var out=[],righe=String(testo||"").split(/\r?\n/).map(function(x){return x.replace(/^\s*(>\s*)+/,"").trim()});
@@ -1387,9 +1418,9 @@ function leggiConvocazione(testo,quando){
     var data=anno+"-"+pad(mi+1)+"-"+pad(+m[1]);
     if(!m[3]&&new Date(data+"T12:00:00")<new Date(rif.getTime()-60*864e5))data=(anno+1)+data.slice(4);
     var cr=m[5].split("·"),comp=(cr[0]||"").trim();
-    out.push({data:data,competizione:comp,giornata:(cr[1]||"").trim(),
+    out.push({data:data,competizione:competizioneUniforme(comp),giornata:(cr[1]||"").trim(),
       sport:/tennis|atp|wta|davis|bjk|internazionali/i.test(comp)?"Tennis":"Calcio",
-      partita:m[4].trim().replace(/\s*[-–]\s*/,"-"),orario:oraNorm(m[7])});
+      partita:partitaUniforme(m[4].trim().replace(/\s*[-–]\s*/,"-")),orario:oraNorm(m[7])});
   }
   return out;
 }
@@ -1444,9 +1475,113 @@ function controllaMail(manuale){
       :e&&e.message==="autorizza"?"Lo script Google va riautorizzato (succede circa ogni settimana): dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.":"Non sono riuscito a leggere la mail. Di solito basta riautorizzare lo script Google: dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.");
   }).then(function(){el("mailBtn").disabled=false});
 }
+function uniformaSalvate(){
+  if(!S.db||!S.canWrite)return;
+  var n=0,id;
+  for(id in S.partite){
+    var d=S.partite[id];if(!d||d.fonte!=="mail")continue;
+    var c=d.competizione?competizioneUniforme(d.competizione):d.competizione,p=d.partita?partitaUniforme(d.partita):d.partita;
+    if(c!==d.competizione||p!==d.partita){d.competizione=c;d.partita=p;salva("partite",id,d);n++}
+  }
+  if(n)render();
+}
+
+/* ------------------------- presidi dal calendario condiviso "Presidio Sky/EIT" ------------------------- */
+var PRES={dal:"2026-12-01",trovati:[],ignorati:[],inCorso:false};
+/* "Serie A (Rossi) (Colognese)" -> "Serie A"; più coppe nello stesso turno: "Conference League - Europa League" */
+function eventoPresidio(t){
+  var x=String(t||"").replace(/\([^)]*\)/g," ").replace(/\b\d{1,2}[:.]\d{2}\b/g," ")
+    .replace(/\b(presidio|presidi|audio|sky|eit)\b/gi," ").replace(/[\s\-–\/|·,:]+$/,"").replace(/^[\s\-–\/|·,:]+/,"").replace(/\s+/g," ").trim();
+  var trov=[];
+  if(/serie\s*a(?![a-z])/i.test(x))trov.push("Serie A");
+  if(/champions|\bucl\b/i.test(x))trov.push("Champions League");
+  if(/conference|\buecl\b/i.test(x))trov.push("Conference League");
+  if(/europa\s*league|\buel\b/i.test(x))trov.push("Europa League");
+  if(/eurolega|euroleague/i.test(x))trov.push("Eurolega");
+  if(/coppa\s*italia/i.test(x))trov.push("Coppa Italia");
+  if(/supercoppa/i.test(x))trov=["Supercoppa"];
+  return trov.length?trov.join(" - "):(x?competizioneUniforme(x):"Serie A");
+}
+function orariDaTitolo(t){
+  var m=/(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/.exec(t||"");
+  return m?[oraNorm(m[1]),oraNorm(m[2])]:["",""];
+}
+function controllaPresidi(manuale){
+  if(!MAIL.url){if(manuale)stato("Prima collega lo script Google con il pulsante Collega Gmail.");return Promise.resolve()}
+  if(PRES.inCorso)return Promise.resolve();
+  PRES.inCorso=true;var b=el("presBtn");if(b)b.disabled=true;
+  if(manuale)stato("Controllo il calendario Presidio Sky/EIT…");
+  return fetch(urlMail()+"&cosa=presidi&dal="+PRES.dal,{redirect:"follow"}).then(function(r){
+    if(!r.ok)throw new Error("http");
+    return r.text().then(function(t){try{return JSON.parse(t)}catch(e){throw new Error("autorizza")}});
+  }).then(function(res){
+    if(res&&res.errore==="chiave")throw new Error("chiave");
+    if(res&&res.messages)throw new Error("vecchio");
+    if(!res||!Array.isArray(res.presidi))throw new Error((res&&res.errore)||"formato");
+    var gia={},id;
+    for(id in S.presidi){var a=S.presidi[id];if(!a)continue;if(a.cal)gia[a.cal]=1;if(a.data&&a.inizio)gia[a.data+"|"+a.inizio]=1}
+    var trov=[];
+    res.presidi.forEach(function(p){
+      var o=p.inizio?[p.inizio,p.fine]:orariDaTitolo(p.titolo);
+      if(!p.data||p.data<PRES.dal||gia[p.id]||(o[0]&&gia[p.data+"|"+o[0]])||PRES.ignorati.indexOf(p.id)>=0)return;
+      gia[p.id]=1;
+      trov.push({k:p.id,data:p.data,inizio:o[0],fine:o[1],evento:eventoPresidio(p.titolo),titolo:p.titolo});
+    });
+    trov.sort(function(a,b){return (a.data+a.inizio)<(b.data+b.inizio)?-1:1});
+    PRES.trovati=trov;renderInboxPres();
+    if(manuale||trov.length)stato(trov.length===1?"Nel calendario c'è 1 presidio nuovo.":trov.length?"Nel calendario ci sono "+trov.length+" presidi nuovi.":"Nessun presidio nuovo nel calendario.");
+  }).catch(function(e){
+    var m=e&&e.message;
+    if(m==="chiave"){
+      if(manuale&&chiediChiave()){PRES.inCorso=false;return controllaPresidi(manuale)}
+      if(manuale){stato("Lo script Google chiede la parola segreta: tocca Controlla il calendario e incollala.");MAIL.chiesta=false}
+      return;
+    }
+    if(!manuale&&m!=="autorizza")return;
+    stato(navigator.onLine===false?"Sei offline: controllo il calendario quando torna la rete."
+      :m==="vecchio"?"Lo script Google non sa ancora leggere il calendario dei presidi: ripubblicalo come nuova versione."
+      :/calendario/i.test(m||"")?m
+      :"Non sono riuscito a leggere il calendario dei presidi. Di solito basta riautorizzare lo script Google: dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.");
+  }).then(function(){PRES.inCorso=false;if(b)b.disabled=false});
+}
+function renderInboxPres(){
+  var box=el("inboxPres"),ul=el("inboxPresList");ul.textContent="";
+  box.hidden=!PRES.trovati.length;
+  PRES.trovati.forEach(function(r,i){
+    var li=document.createElement("li"),lab=document.createElement("label"),cb=document.createElement("input");
+    cb.type="checkbox";cb.checked=true;cb.id="pres-"+i;
+    var w=document.createElement("span");w.className="when";
+    w.textContent=dataLunga(r.data)+(r.inizio?" · "+r.inizio+" - "+r.fine:"");
+    var p=document.createElement("span");p.className="match";p.textContent=r.evento;
+    var mt=document.createElement("span");mt.className="meta";
+    var h=oreDaOrari(r.inizio,r.fine);mt.textContent=h!=null?ore(h)+" ore":"orari da completare";
+    lab.appendChild(cb);lab.appendChild(w);lab.appendChild(p);lab.appendChild(mt);
+    li.appendChild(lab);ul.appendChild(li);
+  });
+  el("inboxPresAdd").disabled=!S.canWrite;
+}
+el("inboxPresAdd").addEventListener("click",function(){
+  var nuovi=0,scartati=[];
+  PRES.trovati.forEach(function(r,i){
+    if(el("pres-"+i).checked){
+      var id=nuovoId(),h=oreDaOrari(r.inizio,r.fine);
+      var d={mese:meseKey(r.data),data:r.data,evento:r.evento,inizio:r.inizio,fine:r.fine,ore:h!=null?h:0,fonte:"calendario",cal:r.k};
+      S.presidi[id]=d;salva("presidi",id,d);nuovi++;
+    } else scartati.push(r.k);
+  });
+  if(scartati.length){
+    PRES.ignorati=PRES.ignorati.concat(scartati);
+    if(S.db&&S.canWrite)S.db.doc("config/mail").set({presidiIgnorati:PRES.ignorati},{merge:true}).catch(function(){});
+  }
+  PRES.trovati=[];renderInboxPres();render();
+  stato(nuovi?"Aggiunti "+nuovi+(nuovi===1?" presidio.":" presidi."):"Nessun presidio aggiunto.");
+});
+el("presBtn").addEventListener("click",function(){controllaPresidi(true)});
+
 function aggiornaMailBtn(){
   var b=el("mailBtn");b.hidden=false;b.textContent=MAIL.url?"Controlla la mail":"Collega Gmail";
   var c=el("calBtn");if(c)c.hidden=!MAIL.url;
+  var pb=el("presBtn");if(pb)pb.hidden=!MAIL.url;
 }
 
 /* ------------------------- calendari (Google + iPhone) tramite lo stesso script ------------------------- */
@@ -1621,7 +1756,7 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
       else stato("Connessione all'archivio interrotta. Ricarica la pagina.");
     }
     var mailLetta=false,autoFatto=false;
-    function provaMail(){if(!autoFatto&&mailLetta&&S.ready){autoFatto=true;if(MAIL.url)controllaMail(false)}}
+    function provaMail(){if(!autoFatto&&mailLetta&&S.ready){autoFatto=true;uniformaSalvate();if(MAIL.url)controllaMail(false).then(function(){return controllaPresidi(false)})}}
     var online=null;
     unsubs.push(FS.collection("partite").onSnapshot({includeMetadataChanges:true},function(s){
       var primo=!S.ready;
@@ -1647,6 +1782,7 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
     unsubs.push(FS.doc("config/mail").onSnapshot(function(s){
       var v=(s.exists&&s.data())||{};
       if(Array.isArray(v.ignorate))MAIL.ignorate=v.ignorate;
+      if(Array.isArray(v.presidiIgnorati))PRES.ignorati=v.presidiIgnorati;
       MAIL.url=v.url||"";MAIL.chiave=v.chiave||"";aggiornaMailBtn();
       if(!s.metadata.fromCache){mailLetta=true;provaMail()}
     },function(){}));
