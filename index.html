@@ -851,14 +851,15 @@ function renderTgi(){
     var tit=document.createElement("div");tit.className="ctitle match";
     var sq=squadre(d.partita),s1=logoSquadra(sq[0]),s2=logoSquadra(sq[1]);
     if(s1)tit.appendChild(s1);
-    tit.appendChild(mkInput({type:"text",id:"p-m-"+r.id,placeholder:"Squadra – Squadra","aria-label":"Partita"},null,d.partita,function(){
-      d.partita=this.value;salva("partite",r.id,d);render();}));
+    tit.appendChild(mkInput({type:"text",id:"p-m-"+r.id,placeholder:"Squadra – Squadra","aria-label":"Partita"},null,partitaUniforme(d.partita),function(){
+      d.partita=partitaUniforme(this.value);salva("partite",r.id,d);render();}));
     if(s2)tit.appendChild(s2);
     k.body.appendChild(tit);
     var sub=document.createElement("div");sub.className="cline";
-    if(d.competizione){sub.appendChild(mkSpan(d.competizione));sub.appendChild(mkSpan("·","sep"));}
-    if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(mkSpan("giornata"));
-    sub.appendChild(mkInput({type:"text",id:"p-g-"+r.id,placeholder:"–","aria-label":"Giornata"},null,d.giornata,function(){
+    var compT=d.competizione?competizioneUniforme(d.competizione):(/^\d+$/.test(String(d.giornata||"").trim())&&(+d.importo||0)!==210?"Serie A":"");
+    if(compT){sub.appendChild(mkSpan(compT));sub.appendChild(mkSpan("·","sep"));}
+    if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(mkSpan("Giornata"));
+    sub.appendChild(mkInput({type:"text",id:"p-g-"+r.id,placeholder:"–","aria-label":"Giornata"},null,d.giornata&&!/^\d+$/.test(String(d.giornata).trim())?nomeUniforme(d.giornata):d.giornata,function(){
       d.giornata=this.value;salva("partite",r.id,d);}));
     k.body.appendChild(sub);
     var tm=document.createElement("div");tm.className="cline";
@@ -1109,7 +1110,7 @@ function renderSumList(){
     if(v==="tgi"){
       var rows=righeMese(S.partite,k);if(!rows.length)return;
       amt=totaleTgi(k);sub=rows.length+(rows.length===1?" partita":" partite");
-      fill=function(b){rows.forEach(function(r){riga(b,dd(r.d.data),r.d.partita,[r.d.competizione,r.d.giornata&&/^\d/.test(r.d.giornata)?"giornata "+r.d.giornata:r.d.giornata].filter(Boolean).join(" · "),money(+r.d.importo||0))})};
+      fill=function(b){rows.forEach(function(r){riga(b,dd(r.d.data),r.d.partita,[r.d.competizione,r.d.giornata&&/^\d/.test(r.d.giornata)?"Giornata "+r.d.giornata:r.d.giornata].filter(Boolean).join(" · "),money(+r.d.importo||0))})};
     } else if(v==="aud"){
       var h=monteOre(k);if(!h)return;
       var pr=righeMese(S.presidi,k);
@@ -1479,9 +1480,12 @@ function uniformaSalvate(){
   if(!S.db||!S.canWrite)return;
   var n=0,id;
   for(id in S.partite){
-    var d=S.partite[id];if(!d||d.fonte!=="mail")continue;
+    var d=S.partite[id];if(!d)continue;
     var c=d.competizione?competizioneUniforme(d.competizione):d.competizione,p=d.partita?partitaUniforme(d.partita):d.partita;
-    if(c!==d.competizione||p!==d.partita){d.competizione=c;d.partita=p;salva("partite",id,d);n++}
+    var g=d.giornata&&!/^\d+$/.test(String(d.giornata).trim())?nomeUniforme(d.giornata):d.giornata;
+    /* partite di campionato senza dicitura: giornata numerica e importo da calcio (non tennis, 210 €) */
+    if(!c&&/^\d+$/.test(String(d.giornata||"").trim())&&(+d.importo||0)!==210)c="Serie A";
+    if(c!==d.competizione||p!==d.partita||g!==d.giornata){d.competizione=c;d.partita=p;d.giornata=g;salva("partite",id,d);n++}
   }
   if(n)render();
 }
@@ -1639,7 +1643,7 @@ function renderInbox(){
     p.appendChild(document.createTextNode(r.partita));
     if(s2)p.appendChild(s2);
     var mt=document.createElement("span");mt.className="meta";
-    mt.textContent=[r.competizione,r.giornata?"round "+r.giornata:"",/tennis/i.test(r.sport)?"tennis, 210 €":""].filter(Boolean).join(" · ");
+    mt.textContent=[r.competizione,r.giornata?"Giornata "+r.giornata:"",/tennis/i.test(r.sport)?"tennis, 210 €":""].filter(Boolean).join(" · ");
     lab.appendChild(cb);lab.appendChild(w);lab.appendChild(p);lab.appendChild(mt);
     li.appendChild(lab);ul.appendChild(li);
   });
