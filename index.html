@@ -382,6 +382,8 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
 .p-tgi .phead h2{flex:0 0 auto}
 .p-aud .phead h2{flex:0 0 auto}
 .p-tgi .phead .right,.p-aud .phead .right{margin-left:0;flex:1 0 100%}
+.p-aud .phead .right{flex:0 0 auto}
+.p-aud .phead .acts{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:8px}
 body:not([data-view="recap"]) #exportBtn{display:none}
 
 /* ---- barra delle pagine, sempre visibile in basso ---- */
@@ -480,9 +482,11 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
   <section class="panel p-aud only-aud">
     <div class="phead">
       <h2>Elenco partite</h2>
-      <button class="btn" id="presBtn" type="button" hidden>Controlla il calendario</button>
       <span class="right" id="audCount"></span>
-      <button class="btn" id="shotBtn" type="button" title="Immagine dei presidi del mese da mandare al collega">Screen presidi</button>
+      <div class="acts">
+        <button class="btn" id="presBtn" type="button" hidden>Check calendario</button>
+        <button class="btn" id="shotBtn" type="button" title="Immagine dei presidi del mese da mandare al collega">Screen presidi</button>
+      </div>
     </div>
     <div class="cards" id="audBody"></div>
     <div id="audEmpty" class="empty" hidden>Nessun presidio in questo mese. Aggiungi il primo turno.</div>
