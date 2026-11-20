@@ -380,7 +380,7 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
 /* ---- intestazioni elenco: conteggio e pulsante a sinistra; CSV solo nel riepilogo ---- */
 .p-tgi .phead,.p-aud .phead{justify-content:flex-start}
 .p-tgi .phead h2{flex:0 0 auto}
-.p-aud .phead h2{flex:0 0 auto}
+.p-aud .phead h2{flex:1 0 100%}
 .p-tgi .phead .right,.p-aud .phead .right{margin-left:0;flex:1 0 100%}
 body:not([data-view="recap"]) #exportBtn{display:none}
 
@@ -480,8 +480,8 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
   <section class="panel p-aud only-aud">
     <div class="phead">
       <h2>Elenco partite</h2>
-      <button class="btn" id="presBtn" type="button" hidden>Controlla il calendario</button>
       <span class="right" id="audCount"></span>
+      <button class="btn" id="presBtn" type="button" hidden>Check calendario</button>
       <button class="btn" id="shotBtn" type="button" title="Immagine dei presidi del mese da mandare al collega">Screen presidi</button>
     </div>
     <div class="cards" id="audBody"></div>
@@ -884,7 +884,8 @@ function renderAud(){
   var body=el("audBody");body.textContent="";
   var rows=righeMese(S.presidi,S.mese);
   el("audEmpty").hidden=rows.length>0;
-  el("audCount").textContent=rows.length?rows.length+(rows.length===1?" turno":" turni"):"";
+  var meseN=S.mese?+String(S.mese).slice(5,7):0;
+  el("audCount").textContent=rows.length?rows.length+(rows.length===1?" turno":" turni")+(meseN?" per "+MESI[meseN-1].toLowerCase():""):"";
   rows.forEach(function(r){
     var d=r.d;
     function ricalcola(){
