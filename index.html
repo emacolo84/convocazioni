@@ -454,7 +454,6 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
   <section class="panel p-tgi only-tgi">
     <div class="phead">
       <h2>Elenco partite</h2>
-      <span class="right" id="tgiCount"></span>
       <button class="btn" id="mailBtn" type="button" hidden>Controlla la mail</button>
     </div>
     <div class="cards" id="tgiBody"></div>
@@ -844,7 +843,6 @@ function renderTgi(){
   var body=el("tgiBody");body.textContent="";
   var rows=righeMese(S.partite,S.mese);
   el("tgiEmpty").hidden=rows.length>0;
-  el("tgiCount").textContent=rows.length?rows.length+(rows.length===1?" convocazione":" convocazioni"):"";
   rows.forEach(function(r){
     var d=r.d;
     var k=mkCard(mkTile("p-data-"+r.id,d.data,function(v){d.data=v;d.mese=meseKey(v);salva("partite",r.id,d);render();}));
