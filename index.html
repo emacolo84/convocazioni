@@ -379,7 +379,8 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
 
 /* ---- intestazioni elenco: conteggio e pulsante a sinistra; CSV solo nel riepilogo ---- */
 .p-tgi .phead,.p-aud .phead{justify-content:flex-start}
-.p-tgi .phead h2,.p-aud .phead h2{flex:1 0 100%}
+.p-tgi .phead h2{flex:0 0 auto}
+.p-aud .phead h2{flex:0 0 auto}
 .p-tgi .phead .right,.p-aud .phead .right{margin-left:0;flex:1 0 100%}
 body:not([data-view="recap"]) #exportBtn{display:none}
 
@@ -479,9 +480,9 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
   <section class="panel p-aud only-aud">
     <div class="phead">
       <h2>Elenco partite</h2>
+      <button class="btn" id="presBtn" type="button" hidden>Controlla il calendario</button>
       <span class="right" id="audCount"></span>
       <button class="btn" id="shotBtn" type="button" title="Immagine dei presidi del mese da mandare al collega">Screen presidi</button>
-      <button class="btn" id="presBtn" type="button" hidden>Controlla il calendario</button>
     </div>
     <div class="cards" id="audBody"></div>
     <div id="audEmpty" class="empty" hidden>Nessun presidio in questo mese. Aggiungi il primo turno.</div>
