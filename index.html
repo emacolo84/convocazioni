@@ -869,6 +869,14 @@ function renderTgi(){
     tm.appendChild(mkSpan("Convocazione"));
     tm.appendChild(apriPicker(mkInput({type:"time",id:"p-o-"+r.id,"aria-label":"Orario di convocazione"},"strong",d.orario,function(){
       d.orario=this.value;salva("partite",r.id,d);})));
+    /* orario di fine calcolato: 6 ore per il calcio, 8 ore e mezza per il tennis */
+    var ini=/^(\d{1,2}):(\d{2})$/.exec(d.orario||"");
+    if(ini){
+      var tennisT=/tennis/i.test(d.sport||"")||+d.importo===210;
+      var fineM=(+ini[1]*60+ +ini[2]+(tennisT?510:360))%1440;
+      tm.appendChild(mkSpan("–","sep"));
+      tm.appendChild(mkSpan(pad(Math.floor(fineM/60))+":"+pad(fineM%60),"strong"));
+    }
     k.body.appendChild(tm);
     var ft=document.createElement("div");ft.className="cfoot";
     var pill=document.createElement("span");pill.className="pill";
