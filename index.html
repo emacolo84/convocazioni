@@ -306,6 +306,24 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .card input[type=number]{-moz-appearance:textfield;appearance:textfield}
 .cline input[type=time]{min-width:0;cursor:pointer}
 
+/* ---- calendario del mese (riepilogo) ---- */
+.calwk,.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 10px}
+.calwk{font-size:12px;color:var(--ink-3);text-align:center;padding-top:10px;padding-bottom:4px;font-weight:600}
+.calgrid{padding-bottom:10px}
+.calday{min-height:46px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink);
+  font:inherit;font-size:13px;padding:4px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:space-between}
+.calday.empty{visibility:hidden}
+.calday.oggi{border-color:var(--ink-2)}
+.calday.on{background:var(--tgi-soft)}
+.calday .dots{display:flex;gap:3px;min-height:6px}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.dot.d-tgi{background:var(--tgi)} .dot.d-aud{background:var(--audio)}
+.calleg{display:flex;gap:14px;padding:0 14px 12px;font-size:12.5px;color:var(--ink-2);flex-wrap:wrap}
+.calpop{margin:0 10px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);font-size:14px}
+.calpop .ttl{font-family:var(--display);font-size:16px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.calpop .ev{display:flex;align-items:center;gap:6px;padding:4px 0;color:var(--ink)}
+.calpop .x{float:right;background:none;border:0;color:var(--ink-2);font-size:18px;cursor:pointer;padding:0 0 0 8px}
+
 /* ---- recap mensile ---- */
 body[data-view="recap"]{--acc:var(--ok);--acc-soft:color-mix(in srgb,var(--ok) 12%,var(--surface))}
 body:not([data-view="recap"]) .only-recap{display:none!important}
@@ -519,6 +537,17 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
       <input type="month" id="fixDal" aria-label="Dal mese">
     </div>
   </div>
+
+  <section class="panel p-cal only-recap">
+    <div class="phead">
+      <h2>Calendario del mese</h2>
+      <span class="right" id="calMese"></span>
+    </div>
+    <div class="calwk"><span>Lun</span><span>Mar</span><span>Mer</span><span>Gio</span><span>Ven</span><span>Sab</span><span>Dom</span></div>
+    <div class="calgrid" id="calGrid"></div>
+    <div class="calleg"><span><i class="dot d-tgi"></i>Convocazione</span><span><i class="dot d-aud"></i>Presidio</span></div>
+    <div class="calpop" id="calPop" hidden></div>
+  </section>
 
   <div class="rate only-aud">
     <span class="lab">Oltre le 30 ore nel mese</span>
@@ -1052,7 +1081,56 @@ function renderSummaryTable(){
   if(tgi){tf(String(c1),1);tf(money(c2),1)} else {tf(ore(Math.round(c1*100)/100),1);tf("",1);tf(money(c2),1)}
 }
 
+var CAL_SEL=null;
+function renderCal(){
+  var grid=el("calGrid");if(!grid)return;grid.textContent="";
+  var k=S.mese||"",pz=k.split("-");if(pz.length<2)return;
+  var y=+pz[0],m=+pz[1];
+  el("calMese").textContent=labelMese(k);
+  var evDi={},id,r;
+  righeMese(S.partite,k).forEach(function(x){var g=x.d.data;(evDi[g]=evDi[g]||[]).push({t:"c",d:x.d})});
+  righeMese(S.presidi,k).forEach(function(x){var g=x.d.data;(evDi[g]=evDi[g]||[]).push({t:"p",d:x.d})});
+  var primo=(new Date(y,m-1,1).getDay()+6)%7,gg=new Date(y,m,0).getDate(),i,b;
+  for(i=0;i<primo;i++){b=document.createElement("button");b.className="calday empty";b.type="button";b.disabled=true;grid.appendChild(b)}
+  var oggi=new Date(),iOggi=oggi.getFullYear()+"-"+pad(oggi.getMonth()+1)+"-"+pad(oggi.getDate());
+  for(i=1;i<=gg;i++){
+    var iso=k+"-"+pad(i),lista=evDi[iso]||[];
+    b=document.createElement("button");b.type="button";b.className="calday"+(iso===iOggi?" oggi":"")+(lista.length?" on":"");
+    b.setAttribute("aria-label",ggmmaa(iso)+(lista.length?" – "+lista.length+(lista.length===1?" evento":" eventi"):""));
+    var n=document.createElement("span");n.textContent=String(i);b.appendChild(n);
+    var ds=document.createElement("span");ds.className="dots";
+    lista.slice(0,4).forEach(function(e){var dd=document.createElement("i");dd.className="dot "+(e.t==="c"?"d-tgi":"d-aud");ds.appendChild(dd)});
+    b.appendChild(ds);
+    (function(iso,lista){b.addEventListener("click",function(){mostraCal(iso,lista)})})(iso,lista);
+    grid.appendChild(b);
+  }
+  if(CAL_SEL&&CAL_SEL.iso.slice(0,7)===k)mostraCal(CAL_SEL.iso,evDi[CAL_SEL.iso]||[]);
+  else el("calPop").hidden=true;
+}
+function mostraCal(iso,lista){
+  var box=el("calPop");box.textContent="";
+  CAL_SEL={iso:iso};
+  var x=document.createElement("button");x.type="button";x.className="x";x.textContent="×";x.setAttribute("aria-label","Chiudi");
+  x.addEventListener("click",function(){box.hidden=true;CAL_SEL=null});
+  box.appendChild(x);
+  var t=document.createElement("div");t.className="ttl";t.textContent=dataLunga(iso);box.appendChild(t);
+  if(!lista.length){var v=document.createElement("div");v.textContent="Nessuna convocazione o presidio.";box.appendChild(v);}
+  lista.forEach(function(e){
+    var row=document.createElement("div");row.className="ev";
+    var dot=document.createElement("i");dot.className="dot "+(e.t==="c"?"d-tgi":"d-aud");row.appendChild(dot);
+    var txt=document.createElement("span");
+    if(e.t==="c"){
+      txt.textContent="Convocazione: "+(e.d.partita||"—")+(e.d.orario?" alle "+e.d.orario:"");
+    }else{
+      var h=oreDaOrari(e.d.inizio,e.d.fine);
+      txt.textContent="Presidio: "+(e.d.evento||"—")+(e.d.inizio?" "+e.d.inizio+(e.d.fine?" - "+e.d.fine:""):"")+(h!=null?" ("+ore(h)+" ore)":"");
+    }
+    row.appendChild(txt);box.appendChild(row);
+  });
+  box.hidden=false;
+}
 function renderRecap(){
+  renderCal();
   var body=el("recapBody");body.textContent="";
   var k=S.mese,r=recapMese(k),np=righeMese(S.partite,k).length,h=monteOre(k);
   function riga(cls,tit,sub,amt){
