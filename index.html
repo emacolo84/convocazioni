@@ -285,6 +285,7 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .cline input[type=time]{min-width:5.4em}
 .cline b,.cline input.strong{color:var(--ink);font-weight:700}
 .cline .sep{color:var(--ink-3)}
+.cline .fine{margin-left:-6px;white-space:nowrap}
 .cfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
 .pill{display:inline-flex;align-items:center;gap:2px;border-radius:99px;padding:3px 12px;font-weight:600;font-size:15px;
   background:color-mix(in srgb,var(--ok) 13%,transparent);color:var(--ok)}
@@ -874,8 +875,10 @@ function renderTgi(){
     if(ini){
       var tennisT=/tennis/i.test(d.sport||"")||+d.importo===210;
       var fineM=(+ini[1]*60+ +ini[2]+(tennisT?510:360))%1440;
-      tm.appendChild(mkSpan("–","sep"));
-      var fine=document.createElement("b");fine.textContent=pad(Math.floor(fineM/60))+":"+pad(fineM%60);tm.appendChild(fine);
+      var fg=document.createElement("span");fg.className="fine";
+      fg.appendChild(mkSpan("– ","sep"));
+      var fine=document.createElement("b");fine.textContent=pad(Math.floor(fineM/60))+":"+pad(fineM%60);fg.appendChild(fine);
+      tm.appendChild(fg);
     }
     k.body.appendChild(tm);
     var ft=document.createElement("div");ft.className="cfoot";
