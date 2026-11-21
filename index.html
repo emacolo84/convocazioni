@@ -875,7 +875,7 @@ function renderTgi(){
       var tennisT=/tennis/i.test(d.sport||"")||+d.importo===210;
       var fineM=(+ini[1]*60+ +ini[2]+(tennisT?510:360))%1440;
       tm.appendChild(mkSpan("–","sep"));
-      tm.appendChild(mkSpan(pad(Math.floor(fineM/60))+":"+pad(fineM%60),"strong"));
+      var fine=document.createElement("b");fine.textContent=pad(Math.floor(fineM/60))+":"+pad(fineM%60);tm.appendChild(fine);
     }
     k.body.appendChild(tm);
     var ft=document.createElement("div");ft.className="cfoot";
