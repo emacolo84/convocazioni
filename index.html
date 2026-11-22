@@ -468,7 +468,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 .login-in input{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink)}
 .login-in .err{color:var(--danger);font-size:13.5px}
 .login-in button[type=submit]{font:inherit;font-weight:600;font-size:16px;padding:11px;border-radius:10px;border:0;background:var(--tgi);color:#fff}
-/* ======== SKIN "stadio" (cp-v71): campo da calcio + mission control + strisce ciak ======== */
+/* ======== SKIN "stadio" (cp-v72): campo da calcio + mission control + strisce ciak ======== */
 :root{
   --lime:#2f8a1d; --board:#0b2a1a; --board-ink:#a9c79a;
   --stamp-ok:#1b7a4b; --stamp-conf:#b36a12; --stamp-dc:#5a6878;
@@ -622,6 +622,9 @@ html body .card.volley{--veil:rgba(4,20,40,.5);
    linear-gradient(#fff,#fff) 92% 0/1.5px 100% no-repeat}
 :root:not([data-theme="dark"]) body .card.basket{--veil:rgba(30,16,4,.5)}
 :root:not([data-theme="dark"]) body .card.volley{--veil:rgba(4,20,40,.45)}
+.cline .bloc{margin-left:0;padding:0 7px;line-height:1.35}
+.p-tgi .ctitle input{font-size:28px}
+@media (max-width:620px){.p-tgi .ctitle input{font-size:24.5px;letter-spacing:0}.p-tgi .ctitle{gap:5px}}
 </style>
 </head>
 <body>
@@ -1130,8 +1133,8 @@ function renderTgi(){
       var fg=document.createElement("span");fg.className="fine";
       fg.appendChild(mkSpan("– ","sep"));
       var fine=document.createElement("b");fine.textContent=pad(Math.floor(fineM/60))+":"+pad(fineM%60);fg.appendChild(fine);
-      var bv=blocco(d,tennisT),bloc=document.createElement("b");bloc.className="bloc "+bv.toLowerCase();bloc.textContent=" · "+bv;fg.appendChild(bloc);
-      tm.appendChild(fg);
+      var bv=blocco(d,tennisT),bloc=document.createElement("b");bloc.className="bloc "+bv.toLowerCase();bloc.textContent=bv;
+      tm.appendChild(fg);tm.appendChild(bloc);
     }
     var ft=document.createElement("div");ft.className="cfoot";
     var pill=document.createElement("span");pill.className="pill";
@@ -2191,6 +2194,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v71";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v72";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
