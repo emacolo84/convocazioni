@@ -319,6 +319,8 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .p-aud .pill{background:var(--audio-soft);color:var(--audio)}
 .cfoot .hint{display:inline;font-size:13px;padding:0}
 .card .del{position:absolute;top:14px;right:10px}
+.cleft{grid-column:1;grid-row:1;align-self:start;display:flex;flex-direction:column;gap:6px;min-width:0}
+.cleft .cline{margin:0}
 @media (max-width:620px){
   .card{grid-template-columns:64px minmax(0,1fr);gap:0 13px;padding:14px 40px 14px 14px}
   .dtile{width:64px;border-radius:14px;padding:7px 0 6px}
@@ -944,10 +946,13 @@ function renderTgi(){
     k.body.appendChild(tit);
     /* competizione sotto il box del giorno (colonna sinistra); giornata nella scheda come prima */
     var comp=document.createElement("div");comp.className="cline";
-    comp.style.gridColumn="1";comp.style.gridRow="2";
     var compT=d.competizione?competizioneUniforme(d.competizione):(/^\d+$/.test(String(d.giornata||"").trim())&&(+d.importo||0)!==210?"Serie A":"");
     comp.appendChild(mkInput({type:"text",id:"p-c-"+r.id,placeholder:"Competizione","aria-label":"Competizione"},null,compT,function(){d.competizione=competizioneUniforme(this.value);salva("partite",r.id,d);}));
-    k.card.appendChild(comp);
+    /* data e competizione in una sola colonna sinistra, così la competizione sta subito sotto la data */
+    var left=document.createElement("div");left.className="cleft";
+    k.card.insertBefore(left,k.body);
+    left.appendChild(k.card.querySelector(".dtile"));
+    left.appendChild(comp);
     var sub=document.createElement("div");sub.className="cline";
     if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(Object.assign(mkSpan("Giornata"),{className:"gl"}));
     sub.appendChild(mkInput({type:"text",id:"p-g-"+r.id,placeholder:"–","aria-label":"Giornata"},null,d.giornata&&!/^\d+$/.test(String(d.giornata).trim())?nomeUniforme(d.giornata):d.giornata,function(){
@@ -2017,6 +2022,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v63";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v64";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
