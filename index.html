@@ -289,6 +289,13 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .cline b,.cline input.strong{color:var(--ink);font-weight:700}
 .cline .sep{color:var(--ink-3)}
 .cline .fine{margin-left:-6px;white-space:nowrap}
+.cline .gl{font-size:13px}
+.stato{font:inherit;font-size:12px;font-weight:600;border:1px solid var(--line);background:transparent;color:var(--ink-2);border-radius:999px;padding:3px 10px;cursor:pointer}
+.stato.conf{color:var(--acc);border-color:var(--acc)}
+.stato.fatta{color:#6fcf8a;border-color:#6fcf8a}
+.stato:disabled{cursor:default;opacity:.7}
+.cline .bloc.t1{color:var(--acc)}
+.cline .bloc.t3{color:#d9a441}
 .cfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
 .pill{display:inline-flex;align-items:center;gap:2px;border-radius:99px;padding:3px 12px;font-weight:600;font-size:15px;
   background:color-mix(in srgb,var(--ok) 13%,transparent);color:var(--ok)}
@@ -901,7 +908,7 @@ function renderTgi(){
     var compT=d.competizione?competizioneUniforme(d.competizione):(/^\d+$/.test(String(d.giornata||"").trim())&&(+d.importo||0)!==210?"Serie A":"");
     sub.appendChild(mkInput({type:"text",id:"p-c-"+r.id,placeholder:"Competizione","aria-label":"Competizione"},null,compT,function(){d.competizione=competizioneUniforme(this.value);salva("partite",r.id,d);}));
     sub.appendChild(mkSpan("·","sep"));
-    if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(mkSpan("Giornata"));
+    if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(Object.assign(mkSpan("Giornata"),{className:"gl"}));
     sub.appendChild(mkInput({type:"text",id:"p-g-"+r.id,placeholder:"–","aria-label":"Giornata"},null,d.giornata&&!/^\d+$/.test(String(d.giornata).trim())?nomeUniforme(d.giornata):d.giornata,function(){
       d.giornata=this.value;salva("partite",r.id,d);}));
     k.body.appendChild(sub);
@@ -916,7 +923,7 @@ function renderTgi(){
       var fg=document.createElement("span");fg.className="fine";
       fg.appendChild(mkSpan("– ","sep"));
       var fine=document.createElement("b");fine.textContent=pad(Math.floor(fineM/60))+":"+pad(fineM%60);fg.appendChild(fine);
-      var bloc=document.createElement("b");bloc.className="bloc";bloc.textContent=" · "+blocco(d,tennisT);fg.appendChild(bloc);
+      var bv=blocco(d,tennisT),bloc=document.createElement("b");bloc.className="bloc "+bv.toLowerCase();bloc.textContent=" · "+bv;fg.appendChild(bloc);
       tm.appendChild(fg);
     }
     k.body.appendChild(tm);
@@ -927,6 +934,14 @@ function renderTgi(){
     pill.appendChild(mkSpan("€"));
     ft.appendChild(pill);
     if(/tennis/i.test(d.sport||"")||+d.importo===210)ft.appendChild(mkSpan("tennis","hint"));
+    /* stato della convocazione: da confermare, confermata, fatta (tocco per cambiare) */
+    var STATI=[["da confermare","da-conf"],["confermata","conf"],["fatta","fatta"]];
+    var si=STATI.findIndex(function(x){return x[0]===(d.stato||"da confermare")});if(si<0)si=0;
+    var sb=document.createElement("button");sb.type="button";sb.className="stato "+STATI[si][1];sb.textContent=STATI[si][0];sb.disabled=!S.canWrite;
+    sb.addEventListener("click",function(){d.stato=STATI[(si+1)%STATI.length][0];salva("partite",r.id,d);render()});
+    ft.appendChild(sb);
+    /* se la mail non indica il building, lo mostro come dedotto dalla regola */
+    if(d.fonte==="mail"&&!d.building)ft.appendChild(mkSpan("building dalla regola","hint"));
     k.body.appendChild(ft);
     k.card.appendChild(delBtn("partite",r.id));
     body.appendChild(k.card);
@@ -1922,6 +1937,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v41";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v42";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
