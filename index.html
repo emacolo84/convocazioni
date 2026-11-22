@@ -305,7 +305,8 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .cline .bloc.t3{color:#d9a441}
 .cfoot{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
 .cfoot .stato{margin-left:auto}
-.tile .foot .cnt{display:block;font:700 24px/1.1 var(--disp);letter-spacing:.02em;color:var(--fg);margin-bottom:4px}
+.tile .foot .cnt{display:block;font-family:var(--display);font-weight:700;font-size:24px;line-height:1.1;letter-spacing:.02em;color:var(--fg);margin-bottom:4px}
+.tile .big .calc{font-family:var(--font,system-ui);font-size:13px;font-weight:500;letter-spacing:0;opacity:.85;margin-left:8px;white-space:nowrap;vertical-align:baseline}
 .pill{display:inline-flex;align-items:center;gap:2px;border-radius:99px;padding:3px 12px;font-weight:600;font-size:15px;
   background:color-mix(in srgb,var(--ok) 13%,transparent);color:var(--ok)}
 .pill input{color:inherit;font-weight:600;font-size:15px;padding:1px 2px;width:auto;field-sizing:content;min-width:2.5em;text-align:right}
@@ -1058,7 +1059,8 @@ function renderTiles(){
     el("t1Lab").textContent="Da fatturare a Leading Technologies";
     el("t1Big").textContent=money(a);
     var np2=righeMese(S.presidi,S.mese).length;
-    setFoot(np2,np2===1?"presidio":"presidi",h?ore(h)+" ore × "+(h>30?"28":"25")+" €/ora":"");
+    setFoot(np2,np2===1?"presidio":"presidi","");
+    if(h){var calc=document.createElement("span");calc.className="calc";calc.textContent=ore(h)+" ore × "+(h>30?"28":"25")+" €/ora";el("t1Big").appendChild(calc)}
     t2Box.style.display="none";
     el("t3Lab").textContent="Stagione "+stag;
     el("t3Big").textContent=money(st.a);
@@ -1975,6 +1977,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v52";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v53";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
