@@ -1604,6 +1604,17 @@ function controllaMail(manuale){
       :e&&e.message==="autorizza"?"Lo script Google va riautorizzato (succede circa ogni settimana): dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.":"Non sono riuscito a leggere la mail. Di solito basta riautorizzare lo script Google: dal computer apri il progetto su script.google.com, scegli la funzione prova e premi Esegui.");
   }).then(function(){el("mailBtn").disabled=false});
 }
+/* convocazioni dei mesi già passati: stato "fatta" se non ne hanno uno (una volta sola, non tocca gli stati scelti) */
+function segnaPassate(){
+  if(!S.db||!S.canWrite)return;
+  var t=new Date(),oggi=t.getFullYear()+"-"+pad(t.getMonth()+1),n=0,id;
+  for(id in S.partite){
+    var d=S.partite[id];if(!d||d.stato)continue;
+    var m=d.mese||meseKey(d.data);
+    if(m&&m<oggi){d.stato="fatta";salva("partite",id,d);n++}
+  }
+  if(n)render();
+}
 function uniformaSalvate(){
   if(!S.db||!S.canWrite)return;
   var n=0,id;
@@ -1891,7 +1902,7 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
       else stato("Connessione all'archivio interrotta. Ricarica la pagina.");
     }
     var mailLetta=false,autoFatto=false;
-    function provaMail(){if(!autoFatto&&mailLetta&&S.ready){autoFatto=true;uniformaSalvate();if(MAIL.url)controllaMail(false).then(function(){return controllaPresidi(false)})}}
+    function provaMail(){if(!autoFatto&&mailLetta&&S.ready){autoFatto=true;uniformaSalvate();segnaPassate();if(MAIL.url)controllaMail(false).then(function(){return controllaPresidi(false)})}}
     var online=null;
     unsubs.push(FS.collection("partite").onSnapshot({includeMetadataChanges:true},function(s){
       var primo=!S.ready;
@@ -1935,6 +1946,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v42";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v43";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
