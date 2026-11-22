@@ -940,8 +940,6 @@ function renderTgi(){
     var sb=document.createElement("button");sb.type="button";sb.className="stato "+STATI[si][1];sb.textContent=STATI[si][0];sb.disabled=!S.canWrite;
     sb.addEventListener("click",function(){d.stato=STATI[(si+1)%STATI.length][0];salva("partite",r.id,d);render()});
     ft.appendChild(sb);
-    /* se la mail non indica il building, lo mostro come dedotto dalla regola */
-    if(d.fonte==="mail"&&!d.building)ft.appendChild(mkSpan("building dalla regola","hint"));
     k.body.appendChild(ft);
     k.card.appendChild(delBtn("partite",r.id));
     body.appendChild(k.card);
