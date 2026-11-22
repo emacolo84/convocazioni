@@ -866,7 +866,7 @@ function stemma(nome){
   return null;
 }
 function squadre(p){
-  var m=/^\s*(.+?)\s*[-–]\s*(.+?)\s*$/.exec(p||"");
+  var m=/^\s*(.+?)\s+[-–—]\s+(.+?)\s*$/.exec(p||"")||/^\s*(.+?)\s*[-–—]\s*(.+?)\s*$/.exec(p||"");
   return m?[m[1],m[2]]:[p||"",""];
 }
 function logoSquadra(nome){
@@ -1102,7 +1102,7 @@ function renderTgi(){
     var tit=document.createElement("div");tit.className="ctitle match";
     var sq=squadre(d.partita),s1=logoSquadra(sq[0]),s2=logoSquadra(sq[1]);
     if(s1)tit.appendChild(s1);
-    tit.appendChild(mkInput({type:"text",id:"p-m-"+r.id,placeholder:"Squadra – Squadra","aria-label":"Partita"},null,partitaUniforme(d.partita),function(){
+    tit.appendChild(mkInput({type:"text",id:"p-m-"+r.id,placeholder:"Squadra - Squadra","aria-label":"Partita"},null,partitaUniforme(d.partita),function(){
       d.partita=partitaUniforme(this.value);salva("partite",r.id,d);render();}));
     if(s2)tit.appendChild(s2);
     k.body.appendChild(tit);
@@ -1719,7 +1719,8 @@ function parolaUniforme(w,i,lettereSole){
   if(SIGLE.indexOf(u.replace(/[^A-Z]/g,""))>=0&&/^[A-Za-z]+$/.test(w))return u;
   if(lettereSole&&/^[a-z]$/i.test(w))return u;
   if(i>0&&MINUSCOLE.indexOf(l)>=0)return l;
-  return l.charAt(0).toUpperCase()+l.slice(1);
+  /* maiuscola anche dopo punto o trattino interno: "H.Verona", "Saint-Germain" */
+  return l.replace(/(^|[.\-'])([a-zàèéìòù])/g,function(x,a,b){return a+b.toUpperCase()});
 }
 /* caratteri invisibili e virgolette tipografiche che arrivano dalle mail */
 function pulisciMail(t){
@@ -1734,8 +1735,10 @@ function nomeUniforme(t,lettereSole){
 }
 function partitaUniforme(p){
   p=pulisciMail(p);
-  var m=/^\s*(.+?)(\s*[-–]\s*)(.+?)\s*$/.exec(p||"");
-  return m?nomeUniforme(m[1])+m[2]+nomeUniforme(m[3]):nomeUniforme(p);
+  /* sempre "Casa - Ospite": spazio, trattino, spazio. Se c'è già un trattino con spazi lo preferisce,
+     così un trattino dentro un nome (es. Saint-Germain) non viene spezzato */
+  var m=/^\s*(.+?)\s+[-–—]\s+(.+?)\s*$/.exec(p||"")||/^\s*(.+?)\s*[-–—]\s*(.+?)\s*$/.exec(p||"");
+  return m?nomeUniforme(m[1])+" - "+nomeUniforme(m[2]):nomeUniforme(p);
 }
 function competizioneUniforme(c){return nomeUniforme(c,true)}
 /* sfondo della scheda secondo lo sport: calcio (default), tennis, basket, volley. Tennis anche se importo 210 */
@@ -1753,7 +1756,7 @@ function rigaMail(c){ // [competizione, round, sport, data, partita, orario part
   if(!data||!/[-–]/.test(c[4]||"")||!ORA.test((c[6]||"").trim()))return null;
   if(c[7]&&!/colognese|emanuele/i.test(c[7]))return null;
   return {data:data,competizione:competizioneUniforme(c[0]),giornata:(c[1]||"").trim(),sport:(c[2]||"").trim(),
-    partita:partitaUniforme((c[4]||"").trim().replace(/\s*[-–]\s*/,"-")),orario:oraNorm(c[6])};
+    partita:partitaUniforme(c[4]||""),orario:oraNorm(c[6])};
 }
 function leggiTabella(testo){
   var out=[],righe=String(testo||"").split(/\r?\n/).map(function(x){return x.replace(/^\s*(>\s*)+/,"").trim()});
@@ -1789,7 +1792,7 @@ function leggiConvocazione(testo,quando){
     var bl=/building\s*(T\d+)/i.exec(t.slice(m.index,re.lastIndex+80));
     out.push({data:data,building:bl?bl[1].toUpperCase():"",competizione:competizioneUniforme(comp),giornata:(cr[1]||"").trim(),
       sport:({tennis:"Tennis",basket:"Basket",volley:"Volley",calcio:"Calcio"})[sportClasse({sport:""},comp)],
-      partita:partitaUniforme(m[4].trim().replace(/\s*[-–]\s*/,"-")),orario:oraNorm(m[7])});
+      partita:partitaUniforme(m[4]),orario:oraNorm(m[7])});
   }
   return out;
 }
@@ -2194,6 +2197,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v72";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v73";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
