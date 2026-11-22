@@ -300,7 +300,8 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .cline input{font-size:15px;padding:1px 4px;width:auto;field-sizing:content;min-width:2.2em;color:inherit}
 .cline input[type=time]{min-width:5.4em;padding-left:0}
 .brk{display:none}
-@media (max-width:620px){.brk{display:block;flex-basis:100%;height:0}}
+/* solo sugli schermi più stretti di 370 px l'orario va a capo: più larghi, la riga sta tutta su una */
+@media (max-width:370px){.brk{display:block;flex-basis:100%;height:0}}
 .cline b,.cline input.strong{color:var(--ink);font-weight:700}
 .cline .sep{color:var(--ink-3)}
 .cline .fine{margin-left:-6px;white-space:nowrap}
@@ -957,7 +958,7 @@ function renderTgi(){
     left.appendChild(k.card.querySelector(".dtile"));
     left.appendChild(comp);
     var sub=document.createElement("div");sub.className="cline";
-    if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(Object.assign(mkSpan("Giornata"),{className:"gl"}));
+    if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(Object.assign(mkSpan("G"),{className:"gl",title:"Giornata"}));
     sub.appendChild(mkInput({type:"text",id:"p-g-"+r.id,placeholder:"–","aria-label":"Giornata"},null,d.giornata&&!/^\d+$/.test(String(d.giornata).trim())?nomeUniforme(d.giornata):d.giornata,function(){
       d.giornata=this.value;salva("partite",r.id,d);}));
     k.body.appendChild(sub);
@@ -2026,6 +2027,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v67";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v68";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
