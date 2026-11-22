@@ -298,7 +298,9 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 :root[data-theme="dark"] .crest.lega.lt{display:none}:root[data-theme="dark"] .crest.lega.dk{display:inline}
 .cline{display:flex;flex-wrap:wrap;align-items:center;gap:0 6px;color:var(--ink-2);font-size:15px;min-width:0}
 .cline input{font-size:15px;padding:1px 4px;width:auto;field-sizing:content;min-width:2.2em;color:inherit}
-.cline input[type=time]{min-width:5.4em}
+.cline input[type=time]{min-width:5.4em;padding-left:0}
+.brk{display:none}
+@media (max-width:620px){.brk{display:block;flex-basis:100%;height:0}}
 .cline b,.cline input.strong{color:var(--ink);font-weight:700}
 .cline .sep{color:var(--ink-3)}
 .cline .fine{margin-left:-6px;white-space:nowrap}
@@ -959,7 +961,9 @@ function renderTgi(){
     sub.appendChild(mkInput({type:"text",id:"p-g-"+r.id,placeholder:"–","aria-label":"Giornata"},null,d.giornata&&!/^\d+$/.test(String(d.giornata).trim())?nomeUniforme(d.giornata):d.giornata,function(){
       d.giornata=this.value;salva("partite",r.id,d);}));
     k.body.appendChild(sub);
-    var tm=document.createElement("div");tm.className="cline";
+    /* giornata, orario di inizio e fine sulla stessa riga (se va a capo, restano allineati a sinistra) */
+    var tm=sub;
+    var brk=document.createElement("span");brk.className="brk";tm.appendChild(brk);
     tm.appendChild(apriPicker(mkInput({type:"time",id:"p-o-"+r.id,"aria-label":"Orario di convocazione"},"strong",d.orario,function(){
       d.orario=this.value;salva("partite",r.id,d);})));
     /* orario di fine calcolato: 6 ore per il calcio, 8 ore e mezza per il tennis */
@@ -973,7 +977,6 @@ function renderTgi(){
       var bv=blocco(d,tennisT),bloc=document.createElement("b");bloc.className="bloc "+bv.toLowerCase();bloc.textContent=" · "+bv;fg.appendChild(bloc);
       tm.appendChild(fg);
     }
-    k.body.appendChild(tm);
     var ft=document.createElement("div");ft.className="cfoot";
     var pill=document.createElement("span");pill.className="pill";
     pill.appendChild(mkInput({type:"number",step:"0.01",min:"0",id:"p-e-"+r.id,"aria-label":"Netto a pagare"},"money",d.importo,function(){
@@ -2023,6 +2026,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v65";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v67";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
