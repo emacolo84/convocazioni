@@ -899,7 +899,6 @@ function renderTgi(){
       d.giornata=this.value;salva("partite",r.id,d);}));
     k.body.appendChild(sub);
     var tm=document.createElement("div");tm.className="cline";
-    tm.appendChild(mkSpan("Convocazione"));
     tm.appendChild(apriPicker(mkInput({type:"time",id:"p-o-"+r.id,"aria-label":"Orario di convocazione"},"strong",d.orario,function(){
       d.orario=this.value;salva("partite",r.id,d);})));
     /* orario di fine calcolato: 6 ore per il calcio, 8 ore e mezza per il tennis */
@@ -1124,7 +1123,7 @@ function mostraCal(iso,lista){
     var dot=document.createElement("i");dot.className="dot "+(e.t==="c"?"d-tgi":"d-aud");row.appendChild(dot);
     var txt=document.createElement("span");
     if(e.t==="c"){
-      txt.textContent="Convocazione: "+(e.d.partita||"—")+(e.d.orario?" alle "+e.d.orario:"");
+      txt.textContent=(e.d.partita||"—")+(e.d.orario?" alle "+e.d.orario:"");
     }else{
       var h=oreDaOrari(e.d.inizio,e.d.fine);
       txt.textContent="Presidio: "+(e.d.evento||"—")+(e.d.inizio?" "+e.d.inizio+(e.d.fine?" - "+e.d.fine:""):"")+(h!=null?" ("+ore(h)+" ore)":"");
