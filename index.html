@@ -942,14 +942,16 @@ function renderTgi(){
       d.partita=partitaUniforme(this.value);salva("partite",r.id,d);render();}));
     if(s2)tit.appendChild(s2);
     k.body.appendChild(tit);
+    /* competizione e giornata sotto il box del giorno (colonna sinistra) */
     var sub=document.createElement("div");sub.className="cline";
+    sub.style.gridColumn="1";sub.style.gridRow="2";
     var compT=d.competizione?competizioneUniforme(d.competizione):(/^\d+$/.test(String(d.giornata||"").trim())&&(+d.importo||0)!==210?"Serie A":"");
     sub.appendChild(mkInput({type:"text",id:"p-c-"+r.id,placeholder:"Competizione","aria-label":"Competizione"},null,compT,function(){d.competizione=competizioneUniforme(this.value);salva("partite",r.id,d);}));
     sub.appendChild(mkSpan("·","sep"));
     if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(Object.assign(mkSpan("Giornata"),{className:"gl"}));
     sub.appendChild(mkInput({type:"text",id:"p-g-"+r.id,placeholder:"–","aria-label":"Giornata"},null,d.giornata&&!/^\d+$/.test(String(d.giornata).trim())?nomeUniforme(d.giornata):d.giornata,function(){
       d.giornata=this.value;salva("partite",r.id,d);}));
-    k.body.appendChild(sub);
+    k.card.appendChild(sub);
     var tm=document.createElement("div");tm.className="cline";
     tm.appendChild(apriPicker(mkInput({type:"time",id:"p-o-"+r.id,"aria-label":"Orario di convocazione"},"strong",d.orario,function(){
       d.orario=this.value;salva("partite",r.id,d);})));
@@ -971,7 +973,6 @@ function renderTgi(){
       d.importo=this.value===""?0:+this.value;salva("partite",r.id,d);render();}));
     pill.appendChild(mkSpan("€"));
     ft.appendChild(pill);
-    if(/tennis/i.test(d.sport||"")||+d.importo===210)ft.appendChild(mkSpan("tennis","hint"));
     /* stato della convocazione: da confermare, confermata, fatta (tocco per cambiare) */
     var STATI=[["da confermare","da-conf"],["confermata","conf"],["fatta","fatta"]];
     var si=STATI.findIndex(function(x){return x[0]===(d.stato||"da confermare")});if(si<0)si=0;
@@ -2015,6 +2016,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v61";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v62";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
