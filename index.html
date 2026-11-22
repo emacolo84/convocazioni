@@ -61,6 +61,8 @@ h1,h2,h3{margin:0;font-family:var(--display);font-weight:600;letter-spacing:.01e
 h1{font-size:26px;line-height:1.05;text-transform:uppercase}
 .sub{color:var(--ink-2);font-size:12.5px}
 .cline input[aria-label="Giornata"]{width:3.2em;min-width:0;field-sizing:content;margin-left:-2px;padding:5px 0 5px 1px;font-weight:700;color:var(--ink)}
+.cline input[aria-label="Competizione"]{width:auto;min-width:0;max-width:100%;field-sizing:content;margin-left:-1px;padding:5px 2px 5px 0;font-size:inherit;font-weight:inherit;color:var(--ink-2)}
+.ver{font-size:11px;color:var(--ink-2);opacity:.6;text-align:center;margin:20px 0 96px}
 .season{display:flex;align-items:center;gap:4px;margin-left:auto}
 .season b{font-family:var(--display);font-size:17px;min-width:92px;text-align:center}
 .months{display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:10px;scrollbar-width:thin}
@@ -587,6 +589,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
   </div>
 
   <div id="login" class="login" hidden></div>
+  <p class="ver" id="verApp"></p>
   <div class="ro-banner" id="roBanner" hidden>Stai guardando l'archivio in sola lettura: le modifiche non vengono salvate.</div>
 </div>
 
@@ -777,6 +780,8 @@ function elimina(coll,id){
 function nuovoId(){return "r"+Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function solaLettura(){S.canWrite=false;el("roBanner").hidden=false;render()}
 function stato(t){el("status").textContent=t}
+/* promemoria: se il controllo della mail è più vecchio di 7 giorni (su questo dispositivo) */
+function avvisoMail(){try{var u=+localStorage.getItem("ultimoControlloMail");if(!u||!MAIL.url)return;var g=Math.floor((Date.now()-u)/864e5);if(g>=7)stato("Ultimo controllo della mail "+g+" giorni fa: controllala per le nuove convocazioni.")}catch(e){}}
 
 /* ------------------------- render ------------------------- */
 function mkInput(attrs,cls,val,onchange){
@@ -894,7 +899,8 @@ function renderTgi(){
     k.body.appendChild(tit);
     var sub=document.createElement("div");sub.className="cline";
     var compT=d.competizione?competizioneUniforme(d.competizione):(/^\d+$/.test(String(d.giornata||"").trim())&&(+d.importo||0)!==210?"Serie A":"");
-    if(compT){sub.appendChild(mkSpan(compT));sub.appendChild(mkSpan("·","sep"));}
+    sub.appendChild(mkInput({type:"text",id:"p-c-"+r.id,placeholder:"Competizione","aria-label":"Competizione"},null,compT,function(){d.competizione=competizioneUniforme(this.value);salva("partite",r.id,d);}));
+    sub.appendChild(mkSpan("·","sep"));
     if(!d.giornata||/^\d/.test(d.giornata))sub.appendChild(mkSpan("Giornata"));
     sub.appendChild(mkInput({type:"text",id:"p-g-"+r.id,placeholder:"–","aria-label":"Giornata"},null,d.giornata&&!/^\d+$/.test(String(d.giornata).trim())?nomeUniforme(d.giornata):d.giornata,function(){
       d.giornata=this.value;salva("partite",r.id,d);}));
@@ -1562,6 +1568,7 @@ function controllaMail(manuale){
   }).then(function(res){
     if(res&&res.errore==="chiave")throw new Error("chiave");
     if(!res||!Array.isArray(res.messages))throw new Error("formato");
+    try{localStorage.setItem("ultimoControlloMail",String(Date.now()))}catch(e){}
     var vis={},trov=[],gia=giaPresenti();
     res.messages.forEach(function(m){
       if(!daTgi(m.sender))return;
@@ -1776,6 +1783,7 @@ el("inboxAdd").addEventListener("click",function(){
   stato(nuove?"Aggiunte "+nuove+(nuove===1?" partita.":" partite."):"Nessuna partita aggiunta.");
 });
 el("mailBtn").addEventListener("click",function(){controllaMail(true)});
+setTimeout(avvisoMail,6000);
 /* ------------------------- primo render e archivio ------------------------- */
 render();
 
@@ -1914,6 +1922,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v41";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
