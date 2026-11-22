@@ -577,6 +577,12 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
     <div class="calpop" id="calPop" hidden></div>
   </section>
 
+  <div class="tile tile-season">
+    <span class="lab" id="t3Lab">Stagione</span>
+    <span class="big acc" id="t3Big">—</span>
+    <span class="foot" id="t3Foot"></span>
+  </div>
+
   <div class="rate only-aud">
     <span class="lab">Oltre le 30 ore nel mese</span>
     <div class="seg" role="group" aria-label="Come si applica la tariffa oltre 30 ore">
@@ -584,12 +590,6 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
       <button id="rateTier" aria-pressed="false">Prime 30 a 25 €, il resto a 28 €</button>
     </div>
     <span class="sub" id="rateInfo"></span>
-  </div>
-
-  <div class="tile tile-season">
-    <span class="lab" id="t3Lab">Stagione</span>
-    <span class="big acc" id="t3Big">—</span>
-    <span class="foot" id="t3Foot"></span>
   </div>
 
   <details class="summary">
@@ -1026,6 +1026,7 @@ function stagioneTot(){
 }
 function renderTiles(){
   var st=stagioneTot(),stag=S.anno+"/"+(S.anno+1);
+  var t2Box=el("t2Big").parentElement;t2Box.style.display="";
   if(S.vista==="recap"){
     var r=recapMese(S.mese),ts=0,nm=0,oggi=new Date(),ko=oggi.getFullYear()+"-"+pad(oggi.getMonth()+1);
     mesiStagione(S.anno).forEach(function(k){var x=recapMese(k).tot;ts+=x;if(k<=ko&&x){nm++}});
@@ -1045,10 +1046,8 @@ function renderTiles(){
     var t=totaleTgi(S.mese),np=righeMese(S.partite,S.mese).length;
     el("t1Lab").textContent="Da fatturare a TGI Sport";
     el("t1Big").textContent=money(t);
-    el("t1Foot").textContent=labelMese(S.mese)+" · netto";
-    el("t2Lab").textContent="Convocazioni nel mese";
-    el("t2Big").textContent=String(np);
-    el("t2Foot").textContent=np?"":"nessuna convocazione";
+    el("t1Foot").textContent=np?np+(np===1?" convocazione":" convocazioni"):"nessuna convocazione";
+    t2Box.style.display="none";
     el("t3Lab").textContent="Stagione "+stag;
     el("t3Big").textContent=money(st.t);
     el("t3Foot").textContent=st.np+(st.np===1?" partita":" partite");
@@ -1056,12 +1055,8 @@ function renderTiles(){
     var h=monteOre(S.mese),a=compenso(h);
     el("t1Lab").textContent="Da fatturare a Leading Technologies";
     el("t1Big").textContent=money(a);
-    el("t1Foot").textContent=labelMese(S.mese)+" · "+(h?ore(h)+" ore × "+(h>30?"28":"25")+" €/ora":"nessun presidio");
-    el("t2Lab").textContent="Monte ore del mese";
-    el("t2Big").textContent=ore(h);
-    el("t2Foot").textContent = h>30 ? "Sopra le 30 ore: tutto il mese a 28 €/ora"
-      : "Mancano "+ore(Math.round((30-h)*100)/100)+" ore alla soglia delle 30";
-    el("t2Meter").style.width=Math.min(100,h/30*100)+"%";
+    el("t1Foot").textContent=h?ore(h)+" ore × "+(h>30?"28":"25")+" €/ora":"nessun presidio";
+    t2Box.style.display="none";
     el("t3Lab").textContent="Stagione "+stag;
     el("t3Big").textContent=money(st.a);
     el("t3Foot").textContent=ore(st.h)+" ore di presidio";
@@ -1977,6 +1972,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v49";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v51";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
