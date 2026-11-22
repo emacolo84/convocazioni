@@ -356,6 +356,10 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
 .rrow.del-pad{padding-right:48px}
 .rbar{align-self:stretch;border-radius:99px;background:var(--ink-3)}
 .r-tgi .rbar{background:var(--tgi)} .r-aud .rbar{background:var(--audio)} .r-fix .rbar{background:var(--ok)}
+.rstack{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--surface-2);margin:4px 0 6px}
+.rseg{min-width:0;flex-basis:0}
+.rseg.r-tgi-s{background:var(--tgi)} .rseg.r-aud-s{background:var(--audio)} .rseg.r-fix-s{background:var(--ok)} .rseg.r-alt-s{background:var(--ink-3)}
+.rcap{font-size:12px;color:var(--ink-2);margin:0 0 10px;font-variant-numeric:tabular-nums}
 .rmain{min-width:0;display:grid;gap:1px}
 .rtit{display:flex;align-items:center;gap:10px;min-width:0;font-size:18px;font-weight:700}
 .rtit input{font-size:18px;font-weight:700;padding:1px 4px;margin-left:-5px;width:100%;min-width:0}
@@ -1171,6 +1175,15 @@ function renderRecap(){
   renderCal();
   var body=el("recapBody");body.textContent="";
   var k=S.mese,r=recapMese(k),np=righeMese(S.partite,k).length,h=monteOre(k);
+  if(r.tot>0){
+    var parti=[["r-tgi-s","TGI",r.t],["r-aud-s","Presidi",r.a],["r-fix-s","Fisso",r.f],["r-alt-s","Altre",r.o]].filter(function(p){return p[2]>0});
+    var st=document.createElement("div");st.className="rstack";st.setAttribute("aria-hidden","true");
+    parti.forEach(function(p){var sg=document.createElement("span");sg.className="rseg "+p[0];sg.style.flexGrow=String(p[2]);st.appendChild(sg)});
+    body.appendChild(st);
+    var cap=document.createElement("div");cap.className="rcap";
+    cap.textContent=parti.map(function(p){return p[1]+" "+Math.round(p[2]/r.tot*100)+"%"}).join(" · ");
+    body.appendChild(cap);
+  }
   function riga(cls,tit,sub,amt){
     var row=document.createElement("div");row.className="rrow "+cls;
     var bar=document.createElement("span");bar.className="rbar";row.appendChild(bar);
@@ -1963,6 +1976,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v47";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v48";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
