@@ -1902,13 +1902,14 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
       else stato("Connessione all'archivio interrotta. Ricarica la pagina.");
     }
     var mailLetta=false,autoFatto=false;
-    function provaMail(){if(!autoFatto&&mailLetta&&S.ready){autoFatto=true;uniformaSalvate();segnaPassate();if(MAIL.url)controllaMail(false).then(function(){return controllaPresidi(false)})}}
+    function provaMail(){if(!autoFatto&&mailLetta&&S.ready){autoFatto=true;uniformaSalvate();if(MAIL.url)controllaMail(false).then(function(){return controllaPresidi(false)})}}
     var online=null;
     unsubs.push(FS.collection("partite").onSnapshot({includeMetadataChanges:true},function(s){
       var primo=!S.ready;
       if(primo||s.docChanges().length){
         var m={};s.docs.forEach(function(d){m[d.id]=Object.assign({},d.data())});
         S.partite=m;S.ready=true;render();
+        segnaPassate();
         if(!primo&&s.metadata.hasPendingWrites)programmaCal();
       }
       var on=!s.metadata.fromCache;
@@ -1946,6 +1947,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v43";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v44";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
