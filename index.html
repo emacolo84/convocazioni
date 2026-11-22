@@ -468,7 +468,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 .login-in input{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink)}
 .login-in .err{color:var(--danger);font-size:13.5px}
 .login-in button[type=submit]{font:inherit;font-weight:600;font-size:16px;padding:11px;border-radius:10px;border:0;background:var(--tgi);color:#fff}
-/* ======== SKIN "stadio" (cp-v69): campo da calcio + mission control + strisce ciak ======== */
+/* ======== SKIN "stadio" (cp-v70): campo da calcio + mission control + strisce ciak ======== */
 :root{
   --lime:#2f8a1d; --board:#0b2a1a; --board-ink:#a9c79a;
   --stamp-ok:#1b7a4b; --stamp-conf:#b36a12; --stamp-dc:#5a6878;
@@ -530,11 +530,7 @@ body[data-view="recap"] .tile.t-main .big{color:var(--board-ink)}
 .phead h2{font-size:20px;letter-spacing:.08em}
 .cards{gap:14px}
 .card,.cards .card:first-child{border:1px solid var(--glass-line);border-radius:14px;overflow:hidden;
-  background:linear-gradient(160deg,color-mix(in srgb,var(--glass) 100%,transparent),color-mix(in srgb,var(--glass) 45%,transparent));
   box-shadow:none;padding-top:26px}
-:root:not([data-theme="dark"]) .card{background:var(--surface)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card{background:linear-gradient(160deg,#ffffff14,#ffffff06)}}
-:root[data-theme="dark"] .card{background:linear-gradient(160deg,#ffffff14,#ffffff06)}
 .card::before{content:"";position:absolute;left:0;right:0;top:0;height:8px;
   background:repeating-linear-gradient(135deg,#ffffff55 0 8px,#00000099 8px 16px);border-bottom:1px solid var(--glass-line)}
 :root:not([data-theme="dark"]) .card::before{background:repeating-linear-gradient(135deg,#ffffff 0 8px,#10201a 8px 16px)}
@@ -588,6 +584,29 @@ body[data-view="recap"] .tile.t-main .big{color:var(--board-ink)}
 .cline input[type=time]{font-size:15px}
 .p-aud .pill,.p-aud .pill input{font-size:26px}
 .p-aud .cline{gap:0 4px;flex-wrap:nowrap}.p-aud .cline .sep{display:none}.p-aud .cline input[type=time]{font-size:14px;min-width:0}
+/* sfondi dei campi, in CSS puro: erba a strisce (calcio) e terra rossa (tennis), con velo per la leggibilità */
+html body .card{--veil:rgba(5,16,10,.6);
+  background:linear-gradient(var(--veil),var(--veil)),
+   repeating-linear-gradient(90deg,#2f6b2f 0 34px,#3a7a37 34px 68px);}
+.card::after{content:"";position:absolute;inset:8px 0 0;pointer-events:none;opacity:.12;
+  background:
+   linear-gradient(#fff,#fff) 92% 0/1.5px 100% no-repeat,
+   radial-gradient(circle at 92% 50%,transparent 0 22px,#fff 22px 23.5px,transparent 23.5px);}
+html body .card.tennis{--veil:rgba(40,12,4,.62);
+  background:linear-gradient(var(--veil),var(--veil)),
+   radial-gradient(#0000001a 1px,transparent 1.5px) 0 0/5px 5px,
+   linear-gradient(135deg,#b5532b,#a8481f);}
+.card.tennis::after{opacity:.16;background:
+   linear-gradient(#fff,#fff) 0 78%/100% 1.5px no-repeat,
+   linear-gradient(#fff,#fff) 92% 0/1.5px 78% no-repeat;border-radius:0;}
+:root:not([data-theme="dark"]) body .card{--veil:rgba(8,28,14,.60)}
+:root:not([data-theme="dark"]) body .card.tennis{--veil:rgba(60,18,6,.50)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body .card{--veil:rgba(5,16,10,.6)}:root:not([data-theme="light"]) body .card.tennis{--veil:rgba(40,12,4,.62)}}
+:root:not([data-theme="dark"]) .card .ctitle input,:root:not([data-theme="dark"]) .card .cline,:root:not([data-theme="dark"]) .card .cline input,:root:not([data-theme="dark"]) .card .pill,:root:not([data-theme="dark"]) .card .pill input,:root:not([data-theme="dark"]) .card .cleft .cline input{color:#f2f7f1}
+:root:not([data-theme="dark"]) .card .cline .gl,:root:not([data-theme="dark"]) .card .hint,:root:not([data-theme="dark"]) .card .del{color:#cfe0d2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card .ctitle input,:root:not([data-theme="light"]) .card .cline input{color:inherit}}
+:root:not([data-theme="dark"]) body .card{--stamp-ok:#7be39b;--stamp-conf:#ffbf75;--stamp-dc:#c3d0c8;--tgi:#a9c79a;--audio:#93bfd4;--ink-2:#cfe0d2;--ink-3:#a9bfb0;--ink:#f2f7f1;--glass-line:#ffffff2a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body .card{--stamp-ok:#6fe08f;--stamp-conf:#ffb35c;--stamp-dc:#9fb0a6;--tgi:#a9c79a;--audio:#93bfd4;--ink-2:#9db3a5;--ink-3:#6f8a7b;--glass-line:#ffffff1f}}
 </style>
 </head>
 <body>
@@ -1059,6 +1078,7 @@ function renderTgi(){
   rows.forEach(function(r){
     var d=r.d;
     var k=mkCard(mkTile("p-data-"+r.id,d.data,function(v){d.data=v;d.mese=meseKey(v);salva("partite",r.id,d);render();}));
+    if(/tennis/i.test(d.sport||"")||+d.importo===210)k.card.classList.add("tennis");
     k.card.classList.add("st-"+(d.stato==="confermata"?"conf":d.stato==="fatta"?"fatta":"dc"));
     if((d.mese||meseKey(d.data))<mesePresente())k.card.classList.add("passata");
     var tit=document.createElement("div");tit.className="ctitle match";
@@ -2147,6 +2167,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v69";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v70";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
