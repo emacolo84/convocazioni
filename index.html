@@ -75,6 +75,11 @@ h1{font-size:26px;line-height:1.05;text-transform:uppercase}
   margin-left:6px;vertical-align:middle}
 .mo[aria-current="true"] .dot{background:var(--surface)}
 .mo .dot[hidden]{display:none}
+.mo[aria-current="true"]{box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--ink)}
+.mo .dot{width:4px;height:4px}
+.card.st-dc{box-shadow:inset 4px 0 0 var(--warn)}
+.card.st-conf{box-shadow:inset 4px 0 0 var(--ok)}
+.card.st-fatta{box-shadow:inset 4px 0 0 var(--line)}
 
 /* ---- cifre di sintesi ---- */
 .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:18px}
@@ -94,7 +99,7 @@ h1{font-size:26px;line-height:1.05;text-transform:uppercase}
 /* ---- pannelli ---- */
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-top:18px;
   overflow:hidden}
-.phead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:11px 14px;
+.phead{min-height:54px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:11px 14px;
   border-bottom:1px solid var(--line);background:var(--surface-2)}
 .phead h2{font-size:17px;text-transform:uppercase;letter-spacing:.05em}
 .chip{font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;
@@ -142,6 +147,8 @@ input.money,input.ore{text-align:right;font-variant-numeric:tabular-nums;font-we
 .flag{color:var(--warn);font-weight:600}
 
 /* ---- tariffa + riepilogo ---- */
+.fixMese{width:100%;margin:0;font-family:var(--display);font-weight:700;font-size:30px;line-height:1;color:var(--acc);font-variant-numeric:tabular-nums}
+.fixMese small{font:500 12px var(--font,system-ui);color:var(--ink-2);letter-spacing:.02em}
 .rate{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:18px;padding:11px 14px;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r);font-size:13px}
 .rate .lab{font-family:var(--display);font-size:12.5px;font-weight:600;letter-spacing:.09em;
@@ -325,6 +332,11 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .calday.empty{visibility:hidden}
 .calday.oggi{border-color:var(--ink-2)}
 .calday.on{background:var(--tgi-soft)}
+.calday.sel{color:var(--surface)}
+.calday.sel.sel-tgi{background:var(--tgi);border-color:var(--tgi)}
+.calday.sel.sel-aud{background:var(--audio);border-color:var(--audio)}
+.calday.sel.sel-mix{background:var(--ink);border-color:var(--ink)}
+.calday.sel.oggi{border-color:var(--surface);box-shadow:0 0 0 2px var(--ink-2)}
 .calday .dots{display:flex;gap:3px;min-height:6px}
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
 .dot.d-tgi{background:var(--tgi)} .dot.d-aud{background:var(--audio)}
@@ -344,6 +356,10 @@ body[data-view="recap"] .only-tgi,body[data-view="recap"] .only-aud,body[data-vi
 .rrow.del-pad{padding-right:48px}
 .rbar{align-self:stretch;border-radius:99px;background:var(--ink-3)}
 .r-tgi .rbar{background:var(--tgi)} .r-aud .rbar{background:var(--audio)} .r-fix .rbar{background:var(--ok)}
+.rstack{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--surface-2);margin:4px 0 6px}
+.rseg{min-width:0;flex-basis:0}
+.rseg.r-tgi-s{background:var(--tgi)} .rseg.r-aud-s{background:var(--audio)} .rseg.r-fix-s{background:var(--ok)} .rseg.r-alt-s{background:var(--ink-3)}
+.rcap{font-size:12px;color:var(--ink-2);margin:0 0 10px;font-variant-numeric:tabular-nums}
 .rmain{min-width:0;display:grid;gap:1px}
 .rtit{display:flex;align-items:center;gap:10px;min-width:0;font-size:18px;font-weight:700}
 .rtit input{font-size:18px;font-weight:700;padding:1px 4px;margin-left:-5px;width:100%;min-width:0}
@@ -541,6 +557,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 
   <div class="rate only-recap">
     <span class="lab">Entrata fissa ogni mese</span>
+    <p class="fixMese" aria-live="polite"><span id="fixMeseVal"></span><small> questo mese</small></p>
     <div class="fix">
       <input type="text" id="fixNome" class="fnome" aria-label="Da chi arriva l'entrata fissa" placeholder="Da chi">
       <input type="number" id="fixImp" class="fimp" step="0.01" min="0" aria-label="Importo al mese"><span>€ al mese, da</span>
@@ -897,6 +914,7 @@ function renderTgi(){
   rows.forEach(function(r){
     var d=r.d;
     var k=mkCard(mkTile("p-data-"+r.id,d.data,function(v){d.data=v;d.mese=meseKey(v);salva("partite",r.id,d);render();}));
+    k.card.classList.add("st-"+(d.stato==="confermata"?"conf":d.stato==="fatta"?"fatta":"dc"));
     var tit=document.createElement("div");tit.className="ctitle match";
     var sq=squadre(d.partita),s1=logoSquadra(sq[0]),s2=logoSquadra(sq[1]);
     if(s1)tit.appendChild(s1);
@@ -1124,7 +1142,8 @@ function renderCal(){
     var ds=document.createElement("span");ds.className="dots";
     lista.slice(0,4).forEach(function(e){var dd=document.createElement("i");dd.className="dot "+(e.t==="c"?"d-tgi":"d-aud");ds.appendChild(dd)});
     b.appendChild(ds);
-    (function(iso,lista){b.addEventListener("click",function(){mostraCal(iso,lista)})})(iso,lista);
+    if(CAL_SEL&&CAL_SEL.iso===iso){var hasT=lista.some(function(e){return e.t==="c"}),hasA=lista.some(function(e){return e.t!=="c"});b.classList.add("sel",hasT&&!hasA?"sel-tgi":hasA&&!hasT?"sel-aud":"sel-mix")}
+    (function(iso,lista){b.addEventListener("click",function(){mostraCal(iso,lista);renderCal()})})(iso,lista);
     grid.appendChild(b);
   }
   if(CAL_SEL&&CAL_SEL.iso.slice(0,7)===k)mostraCal(CAL_SEL.iso,evDi[CAL_SEL.iso]||[]);
@@ -1156,6 +1175,15 @@ function renderRecap(){
   renderCal();
   var body=el("recapBody");body.textContent="";
   var k=S.mese,r=recapMese(k),np=righeMese(S.partite,k).length,h=monteOre(k);
+  if(r.tot>0){
+    var parti=[["r-tgi-s","TGI",r.t],["r-aud-s","Presidi",r.a],["r-fix-s","Fisso",r.f],["r-alt-s","Altre",r.o]].filter(function(p){return p[2]>0});
+    var st=document.createElement("div");st.className="rstack";st.setAttribute("aria-hidden","true");
+    parti.forEach(function(p){var sg=document.createElement("span");sg.className="rseg "+p[0];sg.style.flexGrow=String(p[2]);st.appendChild(sg)});
+    body.appendChild(st);
+    var cap=document.createElement("div");cap.className="rcap";
+    cap.textContent=parti.map(function(p){return p[1]+" "+Math.round(p[2]/r.tot*100)+"%"}).join(" · ");
+    body.appendChild(cap);
+  }
   function riga(cls,tit,sub,amt){
     var row=document.createElement("div");row.className="rrow "+cls;
     var bar=document.createElement("span");bar.className="rbar";row.appendChild(bar);
@@ -1203,6 +1231,7 @@ function renderRecap(){
   el("recapCount").textContent=labelMese(k);
   el("recapTot").textContent=money(r.tot);
   var f=S.recap.fisso,fn=el("fixNome"),fi=el("fixImp"),fd=el("fixDal");
+  el("fixMeseVal").textContent=money(fissoMese(S.mese));
   if(document.activeElement!==fn)fn.value=f.nome||"";
   if(document.activeElement!==fi)fi.value=f.importo==null?"":f.importo;
   if(document.activeElement!==fd)fd.value=f.dal||"";
@@ -1947,6 +1976,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v44";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v48";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
