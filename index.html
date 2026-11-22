@@ -320,7 +320,8 @@ body[data-view="tgi"] .only-aud, body[data-view="aud"] .only-tgi{display:none!im
 .cfoot .hint{display:inline;font-size:13px;padding:0}
 .card .del{position:absolute;top:14px;right:10px}
 .cleft{grid-column:1;grid-row:1;align-self:start;display:flex;flex-direction:column;gap:6px;min-width:0}
-.cleft .cline{margin:0}
+.cleft .cline{margin:0;justify-content:center;text-align:center}
+.cleft .cline input[aria-label="Competizione"]{color:var(--ink);text-align:center;font-weight:600}
 @media (max-width:620px){
   .card{grid-template-columns:64px minmax(0,1fr);gap:0 13px;padding:14px 40px 14px 14px}
   .dtile{width:64px;border-radius:14px;padding:7px 0 6px}
@@ -2022,6 +2023,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v64";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v65";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
