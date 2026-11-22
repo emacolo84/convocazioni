@@ -147,6 +147,8 @@ input.money,input.ore{text-align:right;font-variant-numeric:tabular-nums;font-we
 .flag{color:var(--warn);font-weight:600}
 
 /* ---- tariffa + riepilogo ---- */
+.fixMese{width:100%;margin:0;font-family:var(--display);font-weight:700;font-size:30px;line-height:1;color:var(--acc);font-variant-numeric:tabular-nums}
+.fixMese small{font:500 12px var(--font,system-ui);color:var(--ink-2);letter-spacing:.02em}
 .rate{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:18px;padding:11px 14px;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--r);font-size:13px}
 .rate .lab{font-family:var(--display);font-size:12.5px;font-weight:600;letter-spacing:.09em;
@@ -546,6 +548,7 @@ body{padding-bottom:calc(66px + env(safe-area-inset-bottom,0px))}
 
   <div class="rate only-recap">
     <span class="lab">Entrata fissa ogni mese</span>
+    <p class="fixMese" aria-live="polite"><span id="fixMeseVal"></span><small> questo mese</small></p>
     <div class="fix">
       <input type="text" id="fixNome" class="fnome" aria-label="Da chi arriva l'entrata fissa" placeholder="Da chi">
       <input type="number" id="fixImp" class="fimp" step="0.01" min="0" aria-label="Importo al mese"><span>€ al mese, da</span>
@@ -1209,6 +1212,7 @@ function renderRecap(){
   el("recapCount").textContent=labelMese(k);
   el("recapTot").textContent=money(r.tot);
   var f=S.recap.fisso,fn=el("fixNome"),fi=el("fixImp"),fd=el("fixDal");
+  el("fixMeseVal").textContent=money(fissoMese(S.mese));
   if(document.activeElement!==fn)fn.value=f.nome||"";
   if(document.activeElement!==fi)fi.value=f.importo==null?"":f.importo;
   if(document.activeElement!==fd)fd.value=f.dal||"";
@@ -1953,6 +1957,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v45";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v46";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
