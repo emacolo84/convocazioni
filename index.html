@@ -1586,6 +1586,8 @@ function uniformaSalvate(){
     var g=d.giornata&&!/^\d+$/.test(String(d.giornata).trim())?nomeUniforme(d.giornata):d.giornata;
     /* partite di campionato senza dicitura: giornata numerica e importo da calcio (non tennis, 210 €) */
     if(!c&&/^\d+$/.test(String(d.giornata||"").trim())&&(+d.importo||0)!==210)c="Serie A";
+    /* record salvati con "Serie A · 14" nel campo competizione: separa competizione e giornata */
+    if(c&&c.indexOf("·")>-1){var cs=c.split("·");c=cs[0].trim();if(!g)g=(cs[1]||"").trim();}
     if(c!==d.competizione||p!==d.partita||g!==d.giornata){d.competizione=c;d.partita=p;d.giornata=g;salva("partite",id,d);n++}
   }
   if(n)render();
