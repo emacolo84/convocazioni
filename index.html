@@ -843,6 +843,9 @@ function renderMonths(){
     b.addEventListener("click",function(){S.mese=k;render()});
     nav.appendChild(b);
   });
+  /* il mese selezionato resta a sinistra: si vedono subito i mesi successivi */
+  var sel=nav.querySelector('[aria-current="true"]');
+  if(sel&&S._navMese!==S.mese){S._navMese=S.mese;nav.scrollLeft+=sel.getBoundingClientRect().left-nav.getBoundingClientRect().left-8}
 }
 
 var GG_BREVI=["Dom","Lun","Mar","Mer","Gio","Ven","Sab"],MM_BREVI=["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
@@ -907,6 +910,7 @@ function renderTgi(){
       var fg=document.createElement("span");fg.className="fine";
       fg.appendChild(mkSpan("– ","sep"));
       var fine=document.createElement("b");fine.textContent=pad(Math.floor(fineM/60))+":"+pad(fineM%60);fg.appendChild(fine);
+      var bloc=document.createElement("b");bloc.className="bloc";bloc.textContent=" · "+blocco(d,tennisT);fg.appendChild(bloc);
       tm.appendChild(fg);
     }
     k.body.appendChild(tm);
@@ -1482,6 +1486,8 @@ function partitaUniforme(p){
   return m?nomeUniforme(m[1])+m[2]+nomeUniforme(m[3]):nomeUniforme(p);
 }
 function competizioneUniforme(c){return nomeUniforme(c,true)}
+/* building: T1 = Serie A, T3 = tennis, Champions, Nations League e il resto (se la mail non lo dice) */
+function blocco(d,tennis){return d.building||(/serie a/i.test(d.competizione||"")||(!d.competizione&&!tennis)?"T1":"T3")}
 function rigaMail(c){ // [competizione, round, sport, data, partita, orario partita, orario conv., operatore]
   var data=dataIt(c[3]);
   if(!data||!/[-–]/.test(c[4]||"")||!ORA.test((c[6]||"").trim()))return null;
@@ -1520,7 +1526,8 @@ function leggiConvocazione(testo,quando){
     var data=anno+"-"+pad(mi+1)+"-"+pad(+m[1]);
     if(!m[3]&&new Date(data+"T12:00:00")<new Date(rif.getTime()-60*864e5))data=(anno+1)+data.slice(4);
     var cr=m[5].split("·"),comp=(cr[0]||"").trim();
-    out.push({data:data,competizione:competizioneUniforme(comp),giornata:(cr[1]||"").trim(),
+    var bl=/building\s*(T\d+)/i.exec(t.slice(m.index,re.lastIndex+80));
+    out.push({data:data,building:bl?bl[1].toUpperCase():"",competizione:competizioneUniforme(comp),giornata:(cr[1]||"").trim(),
       sport:/tennis|atp|wta|davis|bjk|internazionali/i.test(comp)?"Tennis":"Calcio",
       partita:partitaUniforme(m[4].trim().replace(/\s*[-–]\s*/,"-")),orario:oraNorm(m[7])});
   }
@@ -1757,7 +1764,7 @@ el("inboxAdd").addEventListener("click",function(){
   MAIL.trovate.forEach(function(r,i){
     if(el("mail-"+i).checked){
       var id=nuovoId(),d={mese:meseKey(r.data),data:r.data,giornata:r.giornata,orario:r.orario,partita:r.partita,
-        competizione:r.competizione,importo:/tennis/i.test(r.sport)?210:140,fonte:"mail"};
+        competizione:r.competizione,building:r.building||"",importo:/tennis/i.test(r.sport)?210:140,fonte:"mail"};
       S.partite[id]=d;salva("partite",id,d);nuove++;
     } else scartate.push(r.k);
   });
