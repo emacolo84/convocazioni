@@ -624,7 +624,7 @@ html body .card.volley{--veil:rgba(4,20,40,.5);
 :root:not([data-theme="dark"]) body .card.volley{--veil:rgba(4,20,40,.45)}
 .cline .bloc{margin-left:0;padding:0 7px;line-height:1.35}
 .p-tgi .ctitle input{font-size:28px}
-@media (max-width:620px){.p-tgi .ctitle input{font-size:24.5px;letter-spacing:0}.p-tgi .ctitle{gap:5px}}
+@media (max-width:620px){.p-tgi .ctitle input{font-size:22px;letter-spacing:0}.p-tgi .ctitle{gap:5px}}
 </style>
 </head>
 <body>
@@ -1153,7 +1153,29 @@ function renderTgi(){
     body.appendChild(k.card);
   });
   el("tgiTot").textContent=money(totaleTgi(S.mese));
+  adattaNomiPartita();
 }
+
+/* nomi partita: se un nome lungo non sta nella riga, abbassa solo quella scritta quanto basta (min 14px) */
+var misuraTesto=null;
+function adattaNomiPartita(){
+  if(!misuraTesto)misuraTesto=document.createElement("canvas").getContext("2d");
+  [].forEach.call(document.querySelectorAll("#tgiBody .ctitle.match input"),function(i){
+    i.style.fontSize="";
+    var cs=getComputedStyle(i),fs=parseFloat(cs.fontSize);
+    /* spazio libero nella riga: larghezza della riga meno stemmi e spazi tra gli elementi */
+    var riga=i.parentNode,rs=getComputedStyle(riga),gap=parseFloat(rs.columnGap)||0,spazio=riga.clientWidth;
+    [].forEach.call(riga.children,function(c,n){if(n)spazio-=gap;if(c!==i)spazio-=c.getBoundingClientRect().width});
+    spazio-=parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight)+parseFloat(cs.marginLeft)+parseFloat(cs.marginRight)+2;
+    if(!(spazio>0)||!i.value)return;
+    misuraTesto.font=cs.fontWeight+" "+fs+"px "+cs.fontFamily;
+    var ls=parseFloat(cs.letterSpacing)||0;
+    var w=misuraTesto.measureText(i.value).width+ls*i.value.length;
+    if(w>spazio)i.style.fontSize=Math.max(14,Math.floor(fs*spazio/w*2)/2)+"px";
+  });
+}
+window.addEventListener("resize",function(){adattaNomiPartita()});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){adattaNomiPartita()});
 
 function renderAud(){
   var body=el("audBody");body.textContent="";
