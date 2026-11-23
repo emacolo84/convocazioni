@@ -1178,8 +1178,8 @@ function renderTgi(){
     /* orario di fine calcolato: 6 ore per il calcio, 8 ore e mezza per il tennis */
     var ini=/^(\d{1,2}):(\d{2})$/.exec(d.orario||"");
     if(ini){
-      var tennisT=/tennis/i.test(d.sport||"")||+d.importo===210;
-      var fineM=(+ini[1]*60+ +ini[2]+(tennisT?510:360))%1440;
+      var tennisT=durataPartita(d)===510;
+      var fineM=(+ini[1]*60+ +ini[2]+durataPartita(d))%1440;
       var fg=document.createElement("span");fg.className="fine";
       fg.appendChild(mkSpan("– ","sep"));
       var fine=document.createElement("b");fine.textContent=pad(Math.floor(fineM/60))+":"+pad(fineM%60);fg.appendChild(fine);
@@ -1196,7 +1196,7 @@ function renderTgi(){
     var STATI=[["da confermare","da-conf"],["confermata","conf"],["fatta","fatta"]];
     var si=STATI.findIndex(function(x){return x[0]===(d.stato||"da confermare")});if(si<0)si=0;
     var sb=document.createElement("button");sb.type="button";sb.className="stato "+STATI[si][1];sb.textContent=STATI[si][0].charAt(0).toUpperCase()+STATI[si][0].slice(1);sb.disabled=!S.canWrite;
-    sb.addEventListener("click",function(){d.stato=STATI[(si+1)%STATI.length][0];salva("partite",r.id,d);render()});
+    sb.addEventListener("click",function(){d.stato=STATI[(si+1)%STATI.length][0];d.statoManuale=Date.now();salva("partite",r.id,d);render()});
     ft.appendChild(sb);
     k.body.appendChild(ft);
     k.card.appendChild(delBtn("partite",r.id));
@@ -1279,7 +1279,7 @@ function renderAud(){
     if(conf[r.id])k.card.classList.add("conflitto");
     if((d.mese||meseKey(d.data))<mesePresente())k.card.classList.add("passata");
     var sbA=document.createElement("button");sbA.type="button";sbA.className="stato "+STATIA[sia][1];sbA.textContent=STATIA[sia][0].charAt(0).toUpperCase()+STATIA[sia][0].slice(1);sbA.classList.add("stato-p");sbA.disabled=!S.canWrite;
-    sbA.addEventListener("click",function(){d.stato=STATIA[(sia+1)%STATIA.length][0];salva("presidi",r.id,d);render()});
+    sbA.addEventListener("click",function(){d.stato=STATIA[(sia+1)%STATIA.length][0];d.statoManuale=Date.now();salva("presidi",r.id,d);render()});
     var riga=document.createElement("div");riga.className="stato-riga";riga.appendChild(sbA);ft.appendChild(riga);
     k.body.appendChild(ft);
     k.card.appendChild(delBtn("presidi",r.id));
@@ -1936,6 +1936,35 @@ function segnaPassate(){
   }
   if(n)render();
 }
+/* "fatta" in automatico 10 minuti dopo la fine della convocazione.
+   La scelta a mano vince: se lo stato è stato cambiato col pulsante dopo quel momento, non lo tocco più
+   (statoManuale = quando è stato toccato il pulsante l'ultima volta). */
+var DOPO_FINE=10*60000;
+function durataPartita(d){return (/tennis/i.test(d.sport||"")||+d.importo===210)?510:360}
+/* giorno + minuti dalla mezzanotte (anche oltre le 24:00, cioè il giorno dopo) -> istante locale */
+function istante(iso,min){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");if(!m||!(min>=0))return null;return new Date(+m[1],+m[2]-1,+m[3],0,min).getTime()}
+function finePartita(d){var i=minuti(d.orario);return isNaN(i)?null:istante(d.data,i+durataPartita(d))}
+function finePresidio(d){
+  var i=minuti(d.inizio),f=minuti(d.fine);if(isNaN(f))return null;
+  if(!isNaN(i)&&f<=i)f+=1440;
+  return istante(d.data,f);
+}
+function segnaFatte(){
+  if(!S.db||!S.canWrite||!S.ready)return;
+  var ora=Date.now(),n=0;
+  [["partite",S.partite,finePartita],["presidi",S.presidi,finePresidio]].forEach(function(x){
+    for(var id in x[1]){
+      var d=x[1][id];if(!d||d.stato==="fatta")continue;
+      var f=x[2](d);if(f==null)continue;
+      var scad=f+DOPO_FINE;
+      if(ora<scad||(+d.statoManuale||0)>=scad)continue;
+      d.stato="fatta";salva(x[0],id,d);n++;
+    }
+  });
+  if(n)render();
+}
+setInterval(segnaFatte,60000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden)segnaFatte()});
 function uniformaSalvate(){
   if(!S.db||!S.canWrite)return;
   var n=0,id;
@@ -2247,7 +2276,7 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
       if(primo||s.docChanges().length){
         var m={};s.docs.forEach(function(d){m[d.id]=Object.assign({},d.data())});
         S.partite=m;S.ready=true;render();
-        segnaPassate();
+        segnaPassate();segnaFatte();
         if(!primo&&s.metadata.hasPendingWrites)programmaCal();
       }
       var on=!s.metadata.fromCache;
@@ -2257,7 +2286,7 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
     unsubs.push(FS.collection("presidi").onSnapshot(function(s){
       var m={};s.docs.forEach(function(d){m[d.id]=Object.assign({},d.data())});
       S.presidi=m;render();
-      segnaPassate();
+      segnaPassate();segnaFatte();
       if(s.metadata.hasPendingWrites)programmaCal();
     },onErr));
     unsubs.push(FS.doc("config/cal").onSnapshot(function(s){
@@ -2286,6 +2315,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v77";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v78";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
