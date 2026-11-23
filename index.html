@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://*.googleapis.com https://script.google.com https://script.googleusercontent.com https://fonts.googleapis.com https://fonts.gstatic.com; frame-src https://convocazioni-811fe.firebaseapp.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#f2f1ee" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d0e10" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#141b26" media="(prefers-color-scheme: dark)">
 <!-- tema scelto col pulsante (chiaro/scuro), applicato subito per evitare lampi di colore -->
 <script>try{var t=localStorage.getItem("tema");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -627,7 +627,7 @@ html body .card.volley{--veil:rgba(4,20,40,.5);
 .cline .bloc{margin-left:0;padding:0 7px;line-height:1.35}
 .p-tgi .ctitle input{font-size:28px}
 @media (max-width:620px){.p-tgi .ctitle input{font-size:22px;letter-spacing:0}.p-tgi .ctitle{gap:5px}}
-/* ======== cp-v75: sfondo sobrio (grafite / pietra) al posto del verde salvia; le schede restano con i loro campi ======== */
+/* ======== cp-v75: sfondo sobrio (blu notte / pietra, cp-v76) al posto del verde salvia; le schede restano con i loro campi ======== */
 :root{
   --bg:#f2f1ee; --surface:#ffffff; --surface-2:#f8f7f5; --line:#dddad4;
   --glass:#ffffff; --glass-line:#dddad4; --board:#17191c;
@@ -635,18 +635,18 @@ html body .card.volley{--veil:rgba(4,20,40,.5);
   --lime:#2f5d3a; --tgi:#2f5d3a; --tgi-soft:#e4ebe3;
 }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
-  --bg:#0d0e10; --surface:#151619; --surface-2:#1b1d20; --line:#ffffff17;
-  --glass:#ffffff0a; --glass-line:#ffffff1c; --board:#000;
-  --ink:#eeeeec; --ink-2:#a4a7ac; --ink-3:#6f7379;
+  --bg:#141b26; --surface:#1a2230; --surface-2:#202a3a; --line:#ffffff17;
+  --glass:#ffffff0c; --glass-line:#ffffff1c; --board:#0c1119;
+  --ink:#eef0f3; --ink-2:#a3adbd; --ink-3:#6c778a;
 }}
 :root[data-theme="dark"]{
-  --bg:#0d0e10; --surface:#151619; --surface-2:#1b1d20; --line:#ffffff17;
-  --glass:#ffffff0a; --glass-line:#ffffff1c; --board:#000;
-  --ink:#eeeeec; --ink-2:#a4a7ac; --ink-3:#6f7379;
+  --bg:#141b26; --surface:#1a2230; --surface-2:#202a3a; --line:#ffffff17;
+  --glass:#ffffff0c; --glass-line:#ffffff1c; --board:#0c1119;
+  --ink:#eef0f3; --ink-2:#a3adbd; --ink-3:#6c778a;
 }
-html body{background-image:radial-gradient(700px 320px at 50% -120px,#ffffff0e,transparent)}
+html body{background-image:linear-gradient(180deg,#1c2535 0,#141b26 420px)}
 :root:not([data-theme="dark"]) body{background-image:radial-gradient(700px 320px at 50% -120px,#ffffffb3,transparent)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{background-image:radial-gradient(700px 320px at 50% -120px,#ffffff0e,transparent)}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body{background-image:linear-gradient(180deg,#1c2535 0,#141b26 420px)}}
 /* orario di inizio e di fine: stesso carattere, peso e dimensione (VIRTUAL e PRESIDI) */
 .cline input[type=time],.cline .fine b{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
 .cline .fine .sep{font-family:var(--display)}
@@ -2202,7 +2202,7 @@ el("logoutBtn").addEventListener("click",function(){if(fbAuth&&confirm("Vuoi usc
   function aggiorna(){
     var d=scuro(),b=el("temaBtn");
     if(b)b.setAttribute("aria-label",d?"Passa al tema chiaro":"Passa al tema scuro");
-    [].forEach.call(document.querySelectorAll('meta[name="theme-color"]'),function(m){m.setAttribute("content",d?"#0d0e10":"#f2f1ee")});
+    [].forEach.call(document.querySelectorAll('meta[name="theme-color"]'),function(m){m.setAttribute("content",d?"#141b26":"#f2f1ee")});
   }
   el("temaBtn").addEventListener("click",function(){
     var t=scuro()?"light":"dark";R.setAttribute("data-theme",t);
@@ -2273,6 +2273,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v75";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v76";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
