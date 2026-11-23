@@ -513,6 +513,7 @@ h1{font-size:30px;letter-spacing:.02em}
 .mo[aria-current="true"]{background:var(--lime);border-color:var(--lime);color:#06120c;box-shadow:none}
 :root:not([data-theme="dark"]) .mo[aria-current="true"]{color:#fff}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .mo[aria-current="true"]{color:#06120c}}
+:root[data-theme="dark"] .mo[aria-current="true"]{color:#06120c}
 .mo[aria-current="true"] .dot{background:currentColor}
 .mstep{background:var(--glass);border-color:var(--glass-line)}
 
@@ -537,6 +538,7 @@ body[data-view="recap"] .tile.t-main .big{color:var(--board-ink)}
   background:repeating-linear-gradient(135deg,#ffffff55 0 8px,#00000099 8px 16px);border-bottom:1px solid var(--glass-line)}
 :root:not([data-theme="dark"]) .card::before{background:repeating-linear-gradient(135deg,#ffffff 0 8px,#10201a 8px 16px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card::before{background:repeating-linear-gradient(135deg,#ffffff55 0 8px,#00000099 8px 16px)}}
+:root[data-theme="dark"] .card::before{background:repeating-linear-gradient(135deg,#ffffff55 0 8px,#00000099 8px 16px)}
 .card.st-dc,.card.st-conf,.card.st-fatta{box-shadow:none}
 .card .del{top:20px}
 .dtile{background:var(--board);border:1px solid var(--glass-line);color:var(--board-ink);border-radius:10px;font-family:var(--display)}
@@ -553,6 +555,7 @@ body[data-view="recap"] .tile.t-main .big{color:var(--board-ink)}
 .cline .bloc{background:var(--lime);color:#06120c;padding:0 7px;border-radius:3px;font-family:var(--display);font-weight:700;font-style:normal}
 :root:not([data-theme="dark"]) .cline .bloc{color:#fff}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .cline .bloc{color:#06120c}}
+:root[data-theme="dark"] .cline .bloc{color:#06120c}
 .cline .bloc.t1,.cline .bloc.t3{color:#06120c}
 .cline .bloc.t3{background:var(--stamp-conf)}
 .cfoot{border-top:1px solid var(--glass-line);padding-top:10px;margin-top:10px;justify-content:space-between;flex-direction:row-reverse}
@@ -571,15 +574,18 @@ body[data-view="recap"] .tile.t-main .big{color:var(--board-ink)}
 .calday{background:#000;border-color:var(--glass-line);font-family:var(--display);font-size:16px}
 :root:not([data-theme="dark"]) .calday{background:var(--surface-2)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .calday{background:#000}}
+:root[data-theme="dark"] .calday{background:#000}
 .calday.on{background:color-mix(in srgb,var(--lime) 18%,#000)}
 :root:not([data-theme="dark"]) .calday.on{background:var(--tgi-soft)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .calday.on{background:color-mix(in srgb,var(--lime) 18%,#000)}}
+:root[data-theme="dark"] .calday.on{background:color-mix(in srgb,var(--lime) 18%,#000)}
 .calday.sel.sel-tgi{background:var(--lime);color:#06120c}
 .calpop,.rate,.summary,.tile-season{background:var(--glass);border-color:var(--glass-line);border-radius:14px}
 .btn{border-color:var(--glass-line);background:var(--glass)}
 .btn.primary{background:var(--lime);border-color:var(--lime);color:#06120c}
 :root:not([data-theme="dark"]) .btn.primary{color:#fff}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primary{color:#06120c}}
+:root[data-theme="dark"] .btn.primary{color:#06120c}
 .tabbar{background:color-mix(in srgb,var(--bg) 88%,transparent);border-top-color:var(--glass-line)}
 .pfoot{background:var(--glass);border:1px solid var(--glass-line);border-radius:14px;margin-top:14px}
 .cleft .cline input[aria-label="Competizione"]{font-size:11px;letter-spacing:0}
@@ -604,11 +610,14 @@ html body .card.tennis{--veil:rgba(40,12,4,.62);
 :root:not([data-theme="dark"]) body .card{--veil:rgba(8,28,14,.60)}
 :root:not([data-theme="dark"]) body .card.tennis{--veil:rgba(60,18,6,.50)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body .card{--veil:rgba(5,16,10,.6)}:root:not([data-theme="light"]) body .card.tennis{--veil:rgba(40,12,4,.62)}}
+:root[data-theme="dark"] body .card{--veil:rgba(5,16,10,.6)}:root[data-theme="dark"] body .card.tennis{--veil:rgba(40,12,4,.62)}
 :root:not([data-theme="dark"]) .card .ctitle input,:root:not([data-theme="dark"]) .card .cline,:root:not([data-theme="dark"]) .card .cline input,:root:not([data-theme="dark"]) .card .pill,:root:not([data-theme="dark"]) .card .pill input,:root:not([data-theme="dark"]) .card .cleft .cline input{color:#f2f7f1}
 :root:not([data-theme="dark"]) .card .cline .gl,:root:not([data-theme="dark"]) .card .hint,:root:not([data-theme="dark"]) .card .del{color:#cfe0d2}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card .ctitle input,:root:not([data-theme="light"]) .card .cline input{color:inherit}}
+:root[data-theme="dark"] .card .ctitle input,:root[data-theme="dark"] .card .cline input{color:inherit}
 :root:not([data-theme="dark"]) body .card{--stamp-ok:#7be39b;--stamp-conf:#ffbf75;--stamp-dc:#c3d0c8;--tgi:#a9c79a;--audio:#93bfd4;--ink-2:#cfe0d2;--ink-3:#a9bfb0;--ink:#f2f7f1;--glass-line:#ffffff2a}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body .card{--stamp-ok:#6fe08f;--stamp-conf:#ffb35c;--stamp-dc:#9fb0a6;--tgi:#a9c79a;--audio:#93bfd4;--ink-2:#9db3a5;--ink-3:#6f8a7b;--glass-line:#ffffff1f}}
+:root[data-theme="dark"] body .card{--stamp-ok:#6fe08f;--stamp-conf:#ffb35c;--stamp-dc:#9fb0a6;--tgi:#a9c79a;--audio:#93bfd4;--ink-2:#9db3a5;--ink-3:#6f8a7b;--glass-line:#ffffff1f}
 html body .card.basket{--veil:rgba(30,16,4,.55);
   background:linear-gradient(var(--veil),var(--veil)),
    repeating-linear-gradient(90deg,#00000022 0 1.5px,transparent 1.5px 46px),
@@ -651,6 +660,10 @@ html body{background-image:linear-gradient(180deg,#1c2535 0,#141b26 420px)}
 .cline input[type=time],.cline .fine b{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:.02em;font-variant-numeric:tabular-nums;color:var(--ink)}
 .cline .fine .sep{font-family:var(--display)}
 .p-aud .cline input[type=time]{font-size:14px}
+/* cp-v77: anche col tema scelto a mano e su iPhone, inizio, fine e giornata restano chiari e in grassetto */
+:root body .card .cline input.strong,:root body .card .cline .fine b,:root body .card .cline input[aria-label="Giornata"]{color:#f2f7f1;-webkit-text-fill-color:#f2f7f1;font-weight:700;opacity:1}
+.cline input[type=time]{-webkit-appearance:none;appearance:none;background:transparent;border:0}
+.cline input[type=time]::-webkit-date-and-time-value{font-weight:700;text-align:left;margin:0}
 /* pulsante tema chiaro/scuro */
 .titlerow .tema{align-self:center;width:38px;height:38px;padding:0;border-radius:50%;display:grid;place-items:center;color:var(--ink-2)}
 @media (max-width:620px){.titlerow .tema{margin-left:auto}}
@@ -2273,6 +2286,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v76";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v77";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
