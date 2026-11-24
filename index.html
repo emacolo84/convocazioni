@@ -614,7 +614,8 @@ html body .card.tennis{--veil:rgba(40,12,4,.62);
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) body .card{--veil:rgba(5,16,10,.6)}:root:not([data-theme="light"]) body .card.tennis{--veil:rgba(40,12,4,.62)}}
 :root[data-theme="dark"] body .card{--veil:rgba(5,16,10,.6)}:root[data-theme="dark"] body .card.tennis{--veil:rgba(40,12,4,.62)}
 :root:not([data-theme="dark"]) .card .ctitle input,:root:not([data-theme="dark"]) .card .cline,:root:not([data-theme="dark"]) .card .cline input,:root:not([data-theme="dark"]) .card .pill,:root:not([data-theme="dark"]) .card .pill input,:root:not([data-theme="dark"]) .card .cleft .cline input{color:#f2f7f1}
-:root:not([data-theme="dark"]) .card .cline .gl,:root:not([data-theme="dark"]) .card .hint,:root:not([data-theme="dark"]) .card .del{color:#cfe0d2}
+/* cp-v81: in ogni tema (prima mancava col tema scuro scelto a mano su un telefono in chiaro: "12h 15m" usciva spento) */
+.card .cline .gl,.card .hint,.card .del{color:#cfe0d2}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .card .ctitle input,:root:not([data-theme="light"]) .card .cline input{color:inherit}}
 :root[data-theme="dark"] .card .ctitle input,:root[data-theme="dark"] .card .cline input{color:inherit}
 :root:not([data-theme="dark"]) body .card{--stamp-ok:#7be39b;--stamp-conf:#ffbf75;--stamp-dc:#c3d0c8;--tgi:#a9c79a;--audio:#93bfd4;--ink-2:#cfe0d2;--ink-3:#a9bfb0;--ink:#f2f7f1;--glass-line:#ffffff2a}
@@ -2313,6 +2314,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v80";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v81";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>

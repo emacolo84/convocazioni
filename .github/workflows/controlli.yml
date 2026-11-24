@@ -15,3 +15,23 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: node scripts/controlli.js
+
+  aspetto:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Installa il browser di prova
+        run: |
+          npm install --no-save playwright@1.63.0
+          npx playwright install --with-deps chromium
+      - name: Controllo visivo delle schede
+        run: node scripts/controllo-visivo.js
+      - name: Allega gli screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot-schede
+          path: esito-visivo/
