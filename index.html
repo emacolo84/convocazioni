@@ -1140,13 +1140,14 @@ function mkCard(tile){
 
 function renderTgi(){
   var body=el("tgiBody");body.textContent="";
-  var rows=righeMese(S.partite,S.mese);
+  var rows=righeMese(S.partite,S.mese),pidT=prossimaId(rows,finePartita);
   el("tgiEmpty").hidden=rows.length>0;
   rows.forEach(function(r){
     var d=r.d;
     var k=mkCard(mkTile("p-data-"+r.id,d.data,function(v){d.data=v;d.mese=meseKey(v);salva("partite",r.id,d);render();}));
     k.card.classList.add(sportClasse(d,[d.competizione,d.partita].join(" ")));
     k.card.classList.add("st-"+(d.stato==="confermata"?"conf":d.stato==="fatta"?"fatta":"dc"));
+    if(r.id===pidT)k.card.classList.add("prossima");
     if((d.mese||meseKey(d.data))<mesePresente())k.card.classList.add("passata");
     var tit=document.createElement("div");tit.className="ctitle match";
     var sq=squadre(d.partita),s1=logoSquadra(sq[0]),s2=logoSquadra(sq[1]);
@@ -1228,7 +1229,7 @@ if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){ada
 
 function renderAud(){
   var body=el("audBody");body.textContent="";
-  var rows=righeMese(S.presidi,S.mese);
+  var rows=righeMese(S.presidi,S.mese),pidA=prossimaId(rows,finePresidio);
   el("audEmpty").hidden=rows.length>0;
   el("audCount").textContent=rows.length?rows.length+(rows.length===1?" turno":" turni"):"";
   var conf={};
@@ -1246,6 +1247,7 @@ function renderAud(){
     }
     var k=mkCard(mkTile("a-data-"+r.id,d.data,function(v){d.data=v;d.mese=meseKey(v);salva("presidi",r.id,d);render();}));
     k.card.classList.add(sportClasse(d,d.evento));
+    if(r.id===pidA)k.card.classList.add("prossima");
     var tit=document.createElement("div");tit.className="ctitle ev";
     if(LOGHI._seriea&&/serie\s*a(?![a-z])/i.test(d.evento||"")){var lg=imgCrest(LOGHI._seriea,"Serie A Enilive");lg.classList.add("lega");tit.appendChild(lg);}
     else{var cu=coppaUefa(d.evento);if(cu){["lt","dk"].forEach(function(v){var lg=imgCrest(LOGHI._uefa[cu.k][v],cu.n);lg.classList.add("lega","uefa",cu.k,v);tit.appendChild(lg);});}}
@@ -1573,7 +1575,35 @@ function renderSumList(){
 }
 function renderSummary(){renderSummaryTable();renderSumList()}
 
-function render(){renderMonths();renderTiles();renderTgi();renderAud();renderRecap();renderSummary()}
+/* ancoraggio: aprendo VIRTUAL o PRESIDI la pagina si ferma sulla prossima da fare (la prima non ancora finita), non sulla prima del mese */
+var ANC={tgi:true,aud:true,t:{}};
+function prossimaId(rows,fineFn){
+  var ora=Date.now();
+  for(var i=0;i<rows.length;i++){
+    var d=rows[i].d,f=fineFn(d);if(f==null)f=istante(d.data,1439);
+    if(f!=null&&f>=ora)return rows[i].id;
+  }
+  return null;
+}
+function ancora(v){
+  if(!ANC[v]||S.vista!==v)return;
+  var c=document.querySelector("#"+(v==="tgi"?"tgiBody":"audBody")+" .card.prossima");
+  if(!c)return;
+  var top=document.querySelector(".top");
+  window.scrollTo(0,Math.max(0,c.getBoundingClientRect().top+window.pageYOffset-(top?top.offsetHeight:0)-10));
+  /* resta attivo ancora un attimo: font e nomi si assestano e le schede possono spostarsi */
+  if(!ANC.t[v])ANC.t[v]=setTimeout(function(){ANC[v]=false;ANC.t[v]=null},700);
+}
+function programmaAncora(v){
+  ANC[v]=true;clearTimeout(ANC.t[v]);ANC.t[v]=null;
+  requestAnimationFrame(function(){ancora(v)});
+  setTimeout(function(){ancora(v)},350);
+}
+/* se la persona tocca o scorre, l'ancoraggio non deve più muovere la pagina */
+["touchstart","wheel","keydown","mousedown"].forEach(function(ev){
+  window.addEventListener(ev,function(){ANC.tgi=false;ANC.aud=false},{passive:true,capture:true});
+});
+function render(){renderMonths();renderTiles();renderTgi();renderAud();renderRecap();renderSummary();ancora(S.vista)}
 
 /* ------------------------- comandi ------------------------- */
 function setVista(v){
@@ -1586,7 +1616,7 @@ function setVista(v){
   render();
 }
 [].forEach.call(document.querySelectorAll("#tabbar .tab"),function(b){b.addEventListener("click",function(){
-  var v=b.getAttribute("data-vista");if(v!==S.vista){setVista(v);window.scrollTo(0,0)}});});
+  var v=b.getAttribute("data-vista");if(v!==S.vista){setVista(v);window.scrollTo(0,0);programmaAncora(v)}});});
 (function(){var v=null;try{v=localStorage.getItem("vista")}catch(e){} setVista(v||"tgi")})();
 el("prevS").addEventListener("click",function(){S.anno--;S.mese=mesiStagione(S.anno)[0];render()});
 el("nextS").addEventListener("click",function(){S.anno++;S.mese=mesiStagione(S.anno)[0];render()});
@@ -2314,6 +2344,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v81";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v82";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>

@@ -50,6 +50,28 @@ const COMBO = [
 ];
 const effettivo = (os, t) => t || os;
 
+// Apre l'app su telefono con archivio finto e orologio fisso.
+async function apri(browser, { os = 'light', tema = null, ora = '2026-11-24T12:00:00Z', etichetta, errori }) {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, colorScheme: os, locale: 'it-IT', timezoneId: 'Europe/Rome' });
+  await ctx.clock.setFixedTime(new Date(ora));
+  await ctx.addInitScript(t => { try { if (t) localStorage.setItem('tema', t); } catch (e) {} }, tema);
+  const page = await ctx.newPage();
+  page.on('pageerror', e => errori.push(`${etichetta}: errore di pagina: ${e.message}`));
+  page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errori.push(`${etichetta}: console: ${m.text()}`); });
+  await page.route('**/*', route => {
+    const u = new URL(route.request().url());
+    if (u.hostname !== 'app.test') return route.abort();
+    const f = u.pathname.slice(1) || 'index.html';
+    if (f === 'vendor/firebase-app-compat.js') return route.fulfill({ body: MOCK, contentType: 'text/javascript' });
+    if (f.startsWith('vendor/firebase-')) return route.fulfill({ body: '', contentType: 'text/javascript' });
+    if (f === 'sw.js') return route.fulfill({ status: 404, body: '' });
+    const p = path.join(ROOT, f);
+    if (!p.startsWith(ROOT) || !fs.existsSync(p)) return route.fulfill({ status: 404, body: '' });
+    route.fulfill({ path: p });
+  });
+  return { ctx, page };
+}
+
 // Letto nella pagina: misura tutto ciò che serve ai controlli.
 function misura() {
   const out = { overflow: document.documentElement.scrollWidth - window.innerWidth, schede: 0, righe: [], piccoli: [], colori: [] };
@@ -85,23 +107,7 @@ function simili(a, b) {
   for (const [os, tema] of COMBO) {
     for (const vista of ['tgi', 'aud']) {
       const etichetta = `${vista} · telefono ${os}${tema ? ' · tema ' + tema : ''}`;
-      const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, colorScheme: os, locale: 'it-IT' });
-      await ctx.clock.setFixedTime(new Date('2026-11-24T12:00:00Z'));
-      await ctx.addInitScript(t => { try { if (t) localStorage.setItem('tema', t); } catch (e) {} }, tema);
-      const page = await ctx.newPage();
-      page.on('pageerror', e => errori.push(`${etichetta}: errore di pagina: ${e.message}`));
-      page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errori.push(`${etichetta}: console: ${m.text()}`); });
-      await page.route('**/*', route => {
-        const u = new URL(route.request().url());
-        if (u.hostname !== 'app.test') return route.abort();
-        const f = u.pathname.slice(1) || 'index.html';
-        if (f === 'vendor/firebase-app-compat.js') return route.fulfill({ body: MOCK, contentType: 'text/javascript' });
-        if (f.startsWith('vendor/firebase-')) return route.fulfill({ body: '', contentType: 'text/javascript' });
-        if (f === 'sw.js') return route.fulfill({ status: 404, body: '' });
-        const p = path.join(ROOT, f);
-        if (!p.startsWith(ROOT) || !fs.existsSync(p)) return route.fulfill({ status: 404, body: '' });
-        route.fulfill({ path: p });
-      });
+      const { ctx, page } = await apri(browser, { os, tema, etichetta, errori });
       await page.goto('http://app.test/index.html');
       await page.waitForTimeout(800);
       await page.evaluate(v => { const t = document.querySelector('.tab[data-vista="' + v + '"]'); if (t) t.click(); }, vista);
@@ -120,6 +126,34 @@ function simili(a, b) {
       const k = vista + '/' + effettivo(os, tema);
       (colori[k] = colori[k] || []).push({ etichetta, valori: m.colori.join(' ; ') });
       await page.screenshot({ path: path.join(OUT, `${vista}-${os}${tema ? '-tema-' + tema : ''}.png`), fullPage: true });
+      await ctx.close();
+    }
+  }
+  // Ancoraggio: aprendo VIRTUAL o PRESIDI la pagina si ferma sulla prossima da fare (27/11 a mezzogiorno
+  // le prime due partite e il primo presidio sono finiti, la prima della lista non deve essere quella vista).
+  for (const [vista, attesa] of [['tgi', 'tgi'], ['aud', 'aud']]) {
+    for (const via of ['apertura', 'tab']) {
+      const etichetta = `ancoraggio ${vista} (${via})`;
+      const { ctx, page } = await apri(browser, { ora: '2026-11-27T11:00:00Z', etichetta, errori });
+      if (via === 'apertura') await page.addInitScript(v => { try { localStorage.setItem('vista', v); } catch (e) {} }, vista);
+      await page.goto('http://app.test/index.html');
+      await page.waitForTimeout(800);
+      await page.evaluate(() => document.querySelectorAll('select').forEach(s => {
+        if ([...s.options].some(o => o.value === '2026-11')) { s.value = '2026-11'; s.dispatchEvent(new Event('change')); }
+      }));
+      if (via === 'tab') {
+        await page.evaluate(v => document.querySelector('.tab[data-vista="' + v + '"]').click(), vista);
+      }
+      await page.waitForTimeout(1200);
+      const r = await page.evaluate(v => {
+        const cards = [...document.querySelectorAll('#' + (v === 'tgi' ? 'tgiBody' : 'audBody') + ' .card')];
+        const top = document.querySelector('.top').getBoundingClientRect().bottom;
+        const pr = cards.findIndex(c => c.classList.contains('prossima'));
+        const b = pr >= 0 ? cards[pr].getBoundingClientRect() : null;
+        return { n: cards.length, pr, y: window.pageYOffset, top, ct: b && b.top, cb: b && b.bottom, vh: window.innerHeight };
+      }, vista);
+      if (r.pr < 1) errori.push(`${etichetta}: la prossima da fare dovrebbe essere dopo la prima scheda (indice ${r.pr} su ${r.n})`);
+      else if (!(r.y > 0 && r.ct >= r.top - 2 && r.cb <= r.vh)) errori.push(`${etichetta}: la prossima scheda non è visibile sotto la testata (scorrimento ${r.y}px, scheda ${Math.round(r.ct)}-${Math.round(r.cb)}, testata fino a ${Math.round(r.top)})`);
       await ctx.close();
     }
   }
