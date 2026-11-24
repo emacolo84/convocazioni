@@ -558,7 +558,9 @@ body[data-view="recap"] .tile.t-main .big{color:var(--board-ink)}
 :root[data-theme="dark"] .cline .bloc{color:#06120c}
 .cline .bloc.t1,.cline .bloc.t3{color:#06120c}
 .cline .bloc.t3{background:var(--stamp-conf)}
-.cfoot{border-top:1px solid var(--glass-line);padding-top:10px;margin-top:10px;justify-content:space-between;flex-direction:row-reverse}
+.cfoot{padding-top:10px;margin-top:10px;justify-content:space-between;flex-direction:row-reverse;
+  /* cp-v79: lineetta corta a sinistra invece della riga a tutta larghezza, che sembrava una linea del campo */
+  border-top:0;background:linear-gradient(var(--ink-3),var(--ink-3)) left top/28px 2px no-repeat}
 .pill,.p-aud .pill{background:none;color:var(--ink);padding:0;font-family:var(--display);font-weight:700;font-size:30px;line-height:1}
 .pill input{font-family:var(--display);font-size:30px;font-weight:700;color:var(--ink);padding:0 2px}
 @media (max-width:620px){.pill,.pill input{font-size:30px}}
@@ -2315,6 +2317,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v78";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v79";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
