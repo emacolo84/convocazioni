@@ -674,6 +674,24 @@ html body{background-image:linear-gradient(180deg,#1c2535 0,#141b26 420px)}
 .tema .ic-sole{display:none}
 :root[data-theme="dark"] .tema .ic-sole{display:block}:root[data-theme="dark"] .tema .ic-luna{display:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tema .ic-sole{display:block}:root:not([data-theme="light"]) .tema .ic-luna{display:none}}
+/* ---- cp-v83: RIEPILOGO con tre colori ben distinti (TGI salvia, Presidi azzurro, Fisso ambra) ---- */
+:root{--r-tgi:#2f7a3e;--r-aud:#1f6fb8;--r-fix:#b87400;--r-alt:#8a8f98}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--r-tgi:#a9c79a;--r-aud:#6aaef0;--r-fix:#f0b44c;--r-alt:#8a93a3}}
+:root[data-theme="dark"]{--r-tgi:#a9c79a;--r-aud:#6aaef0;--r-fix:#f0b44c;--r-alt:#8a93a3}
+.r-tgi .rbar,.rseg.r-tgi-s{background:var(--r-tgi)}
+.r-aud .rbar,.rseg.r-aud-s{background:var(--r-aud)}
+.r-fix .rbar,.rseg.r-fix-s{background:var(--r-fix)}
+.r-alt .rbar,.rseg.r-alt-s{background:var(--r-alt)}
+.rstack{gap:3px;background:transparent}
+.rseg{border-radius:99px}
+.rcap{display:flex;flex-wrap:wrap;gap:4px 14px}
+.rkey{display:inline-flex;align-items:center;gap:6px}
+.rkey::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--r-alt)}
+.rkey.r-tgi-s::before{background:var(--r-tgi)} .rkey.r-aud-s::before{background:var(--r-aud)} .rkey.r-fix-s::before{background:var(--r-fix)}
+/* totale stagione e "+ Entrata" in colore neutro: non si confondono più con TGI */
+body[data-view="recap"] .tile .big.acc{color:var(--ink)}
+.fixMese #fixMeseVal{color:var(--r-fix)}
+body[data-view="recap"] #addEntrata{background:var(--ink);border-color:var(--ink);color:var(--surface)}
 </style>
 </head>
 <body>
@@ -1458,7 +1476,7 @@ function renderRecap(){
     parti.forEach(function(p){var sg=document.createElement("span");sg.className="rseg "+p[0];sg.style.flexGrow=String(p[2]);st.appendChild(sg)});
     body.appendChild(st);
     var cap=document.createElement("div");cap.className="rcap";
-    cap.textContent=parti.map(function(p){return p[1]+" "+Math.round(p[2]/r.tot*100)+"%"}).join(" · ");
+    parti.forEach(function(p){var it=document.createElement("span");it.className="rkey "+p[0];it.textContent=p[1]+" "+Math.round(p[2]/r.tot*100)+"%";cap.appendChild(it)});
     body.appendChild(cap);
   }
   function riga(cls,tit,sub,amt){
@@ -2344,6 +2362,6 @@ if(window.firebase&&window.FIREBASE_CONFIG&&window.FIREBASE_CONFIG.apiKey){
 })();
 </script>
 
-<script>var APP_VERSION="cp-v82";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
+<script>var APP_VERSION="cp-v83";document.addEventListener("DOMContentLoaded",function(){var v=document.getElementById("verApp");if(v)v.textContent="versione "+APP_VERSION});if("serviceWorker" in navigator){var swPrimaVolta=!!navigator.serviceWorker.controller,swRicaricato=false;navigator.serviceWorker.addEventListener("controllerchange",function(){if(swPrimaVolta&&!swRicaricato){swRicaricato=true;location.reload()}});window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(r){r.update()}).catch(function(){})})}</script>
 </body>
 </html>
