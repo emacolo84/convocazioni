@@ -129,6 +129,32 @@ function simili(a, b) {
       await ctx.close();
     }
   }
+  // RIEPILOGO (cp-v83): i colori di TGI, Presidi e Fisso nella barra devono essere ben distinti tra loro,
+  // e il totale stagione non deve avere il colore di TGI. Screenshot in ogni combinazione di tema.
+  const rgb = c => (c.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+  const dist = (a, b) => { const x = rgb(a), y = rgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); };
+  for (const [os, tema] of COMBO) {
+    const etichetta = `recap · telefono ${os}${tema ? ' · tema ' + tema : ''}`;
+    const { ctx, page } = await apri(browser, { os, tema, etichetta, errori });
+    await page.goto('http://app.test/index.html');
+    await page.waitForTimeout(800);
+    await page.evaluate(() => { const t = document.querySelector('.tab[data-vista="recap"]'); if (t) t.click(); });
+    await page.waitForTimeout(500);
+    const m = await page.evaluate(() => ({
+      overflow: document.documentElement.scrollWidth - window.innerWidth,
+      seg: [...document.querySelectorAll('.rseg')].map(e => getComputedStyle(e).backgroundColor),
+      barre: [...document.querySelectorAll('.rrow .rbar')].map(e => getComputedStyle(e).backgroundColor),
+      stagione: (e => e ? getComputedStyle(e).color : '-')(document.querySelector('#t3Big')),
+    }));
+    if (m.overflow > 0) errori.push(`${etichetta}: scorrimento orizzontale di ${m.overflow}px`);
+    if (m.seg.length < 3) errori.push(`${etichetta}: attesi almeno 3 pezzi nella barra, trovati ${m.seg.length}`);
+    for (let i = 0; i < m.seg.length; i++) for (let j = i + 1; j < m.seg.length; j++)
+      if (dist(m.seg[i], m.seg[j]) < 90) errori.push(`${etichetta}: colori della barra troppo simili (${m.seg[i]} e ${m.seg[j]})`);
+    m.seg.slice(0, 3).forEach((c, i) => { if (m.barre[i] && m.barre[i] !== c) errori.push(`${etichetta}: barretta ${i + 1} (${m.barre[i]}) diversa dalla barra (${c})`); });
+    if (m.seg[0] && dist(m.stagione, m.seg[0]) < 90) errori.push(`${etichetta}: totale stagione dello stesso colore di TGI (${m.stagione})`);
+    await page.screenshot({ path: path.join(OUT, `recap-${os}${tema ? '-tema-' + tema : ''}.png`), fullPage: true });
+    await ctx.close();
+  }
   // Ancoraggio: aprendo VIRTUAL o PRESIDI la pagina si ferma sulla prossima da fare (27/11 a mezzogiorno
   // le prime due partite e il primo presidio sono finiti, la prima della lista non deve essere quella vista).
   for (const [vista, attesa] of [['tgi', 'tgi'], ['aud', 'aud']]) {
